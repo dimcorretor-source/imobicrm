@@ -1,0 +1,13 @@
+{
+  "name": "ImobiCRM",
+  "short_name": "ImobiCRM",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F3EEE2",
+  "theme_color": "#23291F",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "icons/icon-96.png", "sizes": "96x96", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

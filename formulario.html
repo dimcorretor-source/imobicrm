@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fale com um corretor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+:root{
+  --paper:#F3EEE2; --ink:#23291F; --ink-soft:#5B5B4E; --verde:#2F5233; --line:#C9C0AC;
+  --display:'Fraunces', Georgia, serif; --body:'Inter', sans-serif;
+}
+*{box-sizing:border-box;}
+body{ margin:0; font-family:var(--body); background:var(--paper); color:var(--ink); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+.wrap{ width:100%; max-width:480px; }
+.brand{ display:flex; align-items:center; gap:10px; margin-bottom:18px; }
+.brand img{ width:38px; height:38px; border-radius:50%; object-fit:cover; }
+.brand b{ font-family:var(--display); font-size:18px; }
+.card{ background:#fff; border:1px solid var(--line); border-radius:4px; padding:26px 24px; }
+h1{ font-family:var(--display); font-size:22px; margin:0 0 4px 0; }
+p.sub{ font-size:13px; color:var(--ink-soft); margin:0 0 20px 0; }
+.field{ margin-bottom:13px; }
+.field label{ display:block; font-size:11.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; }
+.field input, .field select, .field textarea{ width:100%; padding:10px 11px; border:1px solid var(--line); border-radius:4px; font-size:14px; font-family:inherit; }
+.field textarea{ min-height:60px; resize:vertical; }
+.consent{ display:flex; gap:8px; align-items:flex-start; font-size:12px; color:var(--ink-soft); margin:14px 0; }
+.consent input{ margin-top:3px; }
+button.submit{ width:100%; padding:12px; border:none; border-radius:4px; background:var(--ink); color:var(--paper); font-size:14px; font-weight:600; cursor:pointer; }
+button.submit:disabled{ opacity:0.6; cursor:default; }
+.hp{ position:absolute; left:-9999px; }
+.success{ text-align:center; padding:40px 10px; }
+.success .big{ font-size:40px; }
+.error-msg{ color:#8C2F2F; font-size:12.5px; margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand" id="brandRow"></div>
+  <div class="card" id="cardRoot">Carregando...</div>
+</div>
+<script>
+const params = new URLSearchParams(window.location.search);
+const produtoSlug = params.get('produto');
+const sb = (typeof SUPABASE_URL !== 'undefined' && SUPABASE_URL && !SUPABASE_URL.startsWith('COLE_AQUI'))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+async function init(){
+  const cardRoot = document.getElementById('cardRoot');
+  if(!sb){ cardRoot.innerHTML = '<p>Formulário ainda não configurado.</p>'; return; }
+  if(!produtoSlug){ cardRoot.innerHTML = '<p>Link inválido — nenhum produto informado.</p>'; return; }
+
+  const [{ data: produto }, { data: cfg }] = await Promise.all([
+    sb.from('produtos').select('*').eq('slug', produtoSlug).eq('ativo', true).maybeSingle(),
+    sb.from('config').select('*').eq('id',1).maybeSingle()
+  ]);
+
+  document.getElementById('brandRow').innerHTML = `
+    ${cfg&&cfg.logo?`<img src="${cfg.logo}">`:''}
+    <b>${cfg&&cfg.nome?cfg.nome:'Imobiliária'}</b>
+  `;
+
+  if(!produto){
+    cardRoot.innerHTML = '<p>Este link não está mais disponível. Entre em contato diretamente com a imobiliária.</p>';
+    return;
+  }
+
+  cardRoot.innerHTML = `
+    <h1>${produto.nome}</h1>
+    <p class="sub">${produto.descricao || (produto.cidade ? 'Empreendimento em ' + produto.cidade + '.' : 'Deixe seus dados que um corretor entra em contato.')}</p>
+    <form id="leadForm">
+      <div class="field"><label>Nome completo</label><input type="text" id="fNome" required></div>
+      <div class="field"><label>Telefone / WhatsApp</label><input type="tel" id="fTelefone" required></div>
+      <div class="field"><label>E-mail</label><input type="email" id="fEmail"></div>
+      <div class="field"><label>Você é</label>
+        <select id="fTipo"><option>Comprador</option><option>Investidor</option><option>Locatário</option><option>Vendedor</option></select>
+      </div>
+      <div class="field"><label>Mensagem (opcional)</label><textarea id="fMsg" placeholder="Conte um pouco do que você procura"></textarea></div>
+      <input type="text" name="website" class="hp" id="fHoneypot" autocomplete="off" tabindex="-1">
+      <label class="consent"><input type="checkbox" id="fConsent" required> Concordo em ser contatado(a) por telefone, e-mail ou WhatsApp sobre este empreendimento.</label>
+      <button type="submit" class="submit" id="btnSubmit">Quero mais informações</button>
+      <div class="error-msg" id="formError"></div>
+    </form>
+  `;
+
+  document.getElementById('leadForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(document.getElementById('fHoneypot').value){
+      // provável bot: finge sucesso, não grava nada
+      showSuccess();
+      return;
+    }
+    const btn = document.getElementById('btnSubmit');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    const payload = {
+      id: 'id-' + Math.random().toString(36).slice(2,10) + Date.now().toString(36).slice(-4),
+      nome: document.getElementById('fNome').value.trim(),
+      telefone: document.getElementById('fTelefone').value.trim(),
+      email: document.getElementById('fEmail').value.trim(),
+      origem: 'Site',
+      tipo: document.getElementById('fTipo').value,
+      observacoes: document.getElementById('fMsg').value.trim(),
+      produto_id: produto.id,
+      status: 'Novo',
+      data_criacao: new Date().toISOString().slice(0,10),
+      ultimo_contato: new Date().toISOString().slice(0,10),
+      interacoes: [],
+      corretor_id: null,
+      consentimento: true,
+      consentimento_data: new Date().toISOString()
+    };
+    const { error } = await sb.from('leads').insert([payload]);
+    if(error){
+      document.getElementById('formError').textContent = 'Não consegui enviar. Tente novamente em instantes.';
+      btn.disabled = false; btn.textContent = 'Quero mais informações';
+      console.error(error);
+      return;
+    }
+    showSuccess();
+  });
+}
+
+function showSuccess(){
+  document.getElementById('cardRoot').innerHTML = `
+    <div class="success">
+      <div class="big">✓</div>
+      <h1>Recebemos seus dados!</h1>
+      <p class="sub">Um corretor vai entrar em contato em breve.</p>
+    </div>
+  `;
+}
+init();
+</script>
+</body>
+</html>

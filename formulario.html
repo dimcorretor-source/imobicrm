@@ -58,7 +58,7 @@ async function init(){
   ]);
 
   document.getElementById('brandRow').innerHTML = `
-    ${cfg&&cfg.logo?`<img src="${cfg.logo}">`:''}
+    ${(produto&&produto.logo)?`<img src="${produto.logo}">`:(cfg&&cfg.logo?`<img src="${cfg.logo}">`:'')}
     <b>${cfg&&cfg.nome?cfg.nome:'Imobiliária'}</b>
   `;
 

@@ -305,7 +305,7 @@ tr:hover td{background:var(--paper-2);}
         <div class="brand-logo" id="sidebarLogo">IC</div>
         <div>
           <div class="brand-name" id="sidebarName">ImobiCRM</div>
-          <div class="brand-sub">Corretor</div>
+          <div class="brand-sub" id="sidebarSub">Corretor</div>
         </div>
       </div>
     </div>
@@ -347,7 +347,7 @@ function defaultTheme(){
 }
 function defaultState(){
   return {
-    config: { nome: 'ImobiCRM', logo: null, cidades: 'Mogi Mirim, Holambra e Piracicaba', meta: 30000, theme: defaultTheme() },
+    config: { nome: 'ImobiCRM', logo: null, subtitulo: 'Corretor', cidades: 'Mogi Mirim, Holambra e Piracicaba', meta: 30000, theme: defaultTheme() },
     roletaConfig: { participantes: [], ativa: true, prazoMinutos: 20 },
     usuarios: [], produtos: [], imobiliarias: [],
     leads: [], clientes: [], imoveis: [], compromissos: [], comissoes: [], despesas: [], receitas: []
@@ -371,8 +371,8 @@ function toast(msg){
 function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, tipo:r.tipo, orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
 function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, tipo:l.tipo, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
 
-function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault() }; }
-function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault() }; }
+function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null }; }
+function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null }; }
 
 function rowToCliente(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, cpfCnpj:r.cpf_cnpj, endereco:r.endereco, dataNascimento:r.data_nascimento, profissao:r.profissao, imoveisVinculados:r.imoveis_vinculados||[], dataFechamento:r.data_fechamento, corretorId:r.corretor_id }; }
 function clienteToRow(c){ return { id:c.id, nome:c.nome, telefone:c.telefone, email:c.email, cpf_cnpj:c.cpfCnpj, endereco:c.endereco, data_nascimento:c.dataNascimento||null, profissao:c.profissao, imoveis_vinculados:c.imoveisVinculados||[], data_fechamento:c.dataFechamento||null, corretor_id:c.corretorId }; }
@@ -406,14 +406,14 @@ async function pullAllData(){
   state.comissoes = (comisR.data||[]).map(rowToComissao);
   state.despesas = (despR.data||[]).map(rowToDespesa);
   state.receitas = (recR.data||[]).map(rowToReceita);
-  state.usuarios = (profR.data||[]).map(p=>({id:p.id, nome:p.nome, papel:p.papel, telefone:p.telefone, creci:p.creci, imobiliariaId:p.imobiliaria_id, disponivelRoleta:!!p.disponivel_roleta}));
+  state.usuarios = (profR.data||[]).map(p=>({id:p.id, nome:p.nome, papel:p.papel, telefone:p.telefone, creci:p.creci, imobiliariaId:p.imobiliaria_id, disponivelRoleta:!!p.disponivel_roleta, avatarUrl:p.avatar_url||null}));
   state.produtos = (prodR.data||[]).map(rowToProduto);
   state.imobiliarias = (imobR.data||[]).map(rowToImobiliaria);
   if(roletaR.data){
     state.roletaConfig = { participantes: roletaR.data.participantes||[], ativa: !!roletaR.data.ativa, prazoMinutos: roletaR.data.prazo_minutos||20 };
   }
   if(cfgR.data){
-    state.config = { nome: cfgR.data.nome||'ImobiCRM', logo: cfgR.data.logo||null, cidades: cfgR.data.cidades||'', meta: cfgR.data.meta||0, theme: Object.assign(defaultTheme(), cfgR.data.theme||{}) };
+    state.config = { nome: cfgR.data.nome||'ImobiCRM', logo: cfgR.data.logo||null, subtitulo: cfgR.data.subtitulo!=null?cfgR.data.subtitulo:'Corretor', cidades: cfgR.data.cidades||'', meta: cfgR.data.meta||0, theme: Object.assign(defaultTheme(), cfgR.data.theme||{}) };
   }
   currentProfile = state.usuarios.find(u=>u.id===sessionUser.id) || {id:sessionUser.id, nome:sessionUser.email, papel:'Corretor'};
 }
@@ -438,7 +438,7 @@ async function syncToSupabase(){
     if(isGestor()){
       await syncTable('produtos', state.produtos, produtoToRow);
       await syncTable('imobiliarias', state.imobiliarias, imobiliariaToRow);
-      await sb.from('config').upsert([{ id:1, nome: state.config.nome, logo: state.config.logo, cidades: state.config.cidades, meta: state.config.meta, theme: state.config.theme }], {onConflict:'id'});
+      await sb.from('config').upsert([{ id:1, nome: state.config.nome, logo: state.config.logo, subtitulo: state.config.subtitulo, cidades: state.config.cidades, meta: state.config.meta, theme: state.config.theme }], {onConflict:'id'});
     }
   }catch(e){ console.error('Erro ao sincronizar com o Supabase', e); }
 }
@@ -748,7 +748,7 @@ async function boot(){
 ============================================================ */
 const ALL_VIEWS = [
   {id:'dashboard', label:'Painel', icon:'◆'},
-  {id:'produtos', label:'Produtos', icon:'▥'},
+  {id:'produtos', label:'Produtos', icon:'▥', gestorOnly:true},
   {id:'leads', label:'Leads', icon:'☍'},
   {id:'clientes', label:'Clientes', icon:'▣'},
   {id:'imoveis', label:'Lotes', icon:'⌂'},
@@ -781,12 +781,20 @@ function renderNav(){
   const nu = document.getElementById('navUser');
   const u = currentUser();
   if(u){
-    nu.innerHTML = `<div class="gate-avatar">${u.nome.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div><div><b>${u.nome}</b><span style="font-size:10px; color:#a39d87; text-transform:uppercase;">${u.papel}</span></div>`;
+    const avatarHtml = u.avatarUrl
+      ? `<div class="gate-avatar" style="overflow:hidden; padding:0;"><img src="${u.avatarUrl}" style="width:100%; height:100%; object-fit:cover;"></div>`
+      : `<div class="gate-avatar">${u.nome.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`;
+    nu.innerHTML = `${avatarHtml}<div><b>${u.nome}</b><span style="font-size:10px; color:#a39d87; text-transform:uppercase;">${u.papel}</span></div>`;
   }
 }
 
 function renderBrand(){
   document.getElementById('sidebarName').textContent = state.config.nome || 'ImobiCRM';
+  const subEl = document.getElementById('sidebarSub');
+  if(subEl){
+    subEl.textContent = state.config.subtitulo || '';
+    subEl.style.display = state.config.subtitulo ? '' : 'none';
+  }
   const logoEl = document.getElementById('sidebarLogo');
   if(state.config.logo){
     logoEl.innerHTML = `<img src="${state.config.logo}" alt="Logo">`;
@@ -801,6 +809,7 @@ function renderAll(){
   if(currentView==='equipe' && !canManageTeam()) currentView = 'dashboard';
   if(currentView==='imobiliarias' && !isGestor()) currentView = 'dashboard';
   if(currentView==='roleta' && !isGestor()) currentView = 'dashboard';
+  if(currentView==='produtos' && !isGestor()) currentView = 'dashboard';
   renderNav();
   renderBrand();
   document.getElementById('pageTitle').textContent = ALL_VIEWS.find(v=>v.id===currentView).label;
@@ -932,7 +941,17 @@ function renderDashboard(){
   const destaqueImoveis = state.imoveis.filter(i=>i.destaque);
   const destHtml = destaqueImoveis.length ? `<div class="imoveis-grid">${destaqueImoveis.map(im=>imovelCardHtml(im)).join('')}</div>` : emptyState('Nenhum lote em destaque', 'Marque lotes como destaque na aba Lotes.');
 
+  const statusToggleHtml = !isGestor() ? `
+    <div class="card section-block" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
+        <input type="checkbox" id="dashDisponivelRoleta" ${currentProfile.disponivelRoleta?'checked':''} style="width:20px; height:20px;">
+        <span>${currentProfile.disponivelRoleta ? '🟢 Online — recebendo leads' : '🔴 Offline — não recebendo leads'}</span>
+      </label>
+    </div>
+  ` : '';
+
   c.innerHTML = `
+    ${statusToggleHtml}
     ${kpis}
     ${alertas}
     <div class="section-block"><div class="section-title">Últimos leads</div>${leadsHtml}</div>
@@ -940,6 +959,17 @@ function renderDashboard(){
     <div class="section-block"><div class="section-title">Lotes em destaque</div>${destHtml}</div>
   `;
   bindImovelCardClicks();
+  const dashToggle = document.getElementById('dashDisponivelRoleta');
+  if(dashToggle) dashToggle.addEventListener('change', async (e)=>{
+    const val = e.target.checked;
+    const { error } = await sb.from('profiles').update({ disponivel_roleta: val }).eq('id', currentProfile.id);
+    if(error){ alert('Erro ao atualizar disponibilidade: '+error.message); e.target.checked = !val; return; }
+    currentProfile.disponivelRoleta = val;
+    const u = state.usuarios.find(x=>x.id===currentProfile.id);
+    if(u) u.disponivelRoleta = val;
+    toast(val ? 'Você está online — recebendo leads.' : 'Você ficou offline.');
+    renderDashboard();
+  });
   c.querySelectorAll('.dash-comp-flag').forEach(cb=>cb.addEventListener('change', ()=>{
     const cm = state.compromissos.find(x=>x.id===cb.dataset.id);
     if(!cm) return;
@@ -1551,12 +1581,22 @@ function parseMoneyBR(v){
   return isNaN(n) ? 0 : n;
 }
 
-let imovelFilter = {produto:'Todos', status:'Todos'};
+let imovelFilter = {produto:null, status:'Todos'};
 let imovelSelectMode = false;
 let imovelSelected = new Set();
+let imovelBusca = '';
+const PRODUTO_CORES = ['s-latao','s-azul','s-verde','s-vermelho','s-ink'];
+function produtoCorClass(produtoId){
+  const idx = state.produtos.findIndex(p=>p.id===produtoId);
+  return PRODUTO_CORES[idx>=0 ? idx % PRODUTO_CORES.length : 0];
+}
 
 function renderImoveis(){
   const c = document.getElementById('content');
+  // Feature 6: seleção de empreendimento é obrigatória — auto-seleciona o primeiro produto se nenhum estiver escolhido
+  if(state.produtos.length && (!imovelFilter.produto || !state.produtos.find(p=>p.nome===imovelFilter.produto))){
+    imovelFilter.produto = state.produtos[0].nome;
+  }
   c.innerHTML = `
     <div class="section-title">
       <span>Lotes</span>
@@ -1569,8 +1609,13 @@ function renderImoveis(){
     </div>
     ${!isGestor() ? `<p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px;">Você pode consultar os lotes e editar as condições de pagamento. Cadastro, edição de dados e exclusão de lotes são exclusivos do Gestor.</p>` : ''}
     ${!state.produtos.length ? emptyState('Cadastre um loteamento primeiro', 'Vá em Produtos e cadastre o empreendimento antes de lançar os lotes.') : `
+      <div class="pillbar" id="produtoLegenda" style="margin-bottom:6px;"></div>
       <div class="pillbar" id="produtoPills"></div>
       <div class="pillbar" id="statusPills"></div>
+      <div class="field" style="max-width:320px; margin-bottom:16px;">
+        <input type="text" id="loteBusca" placeholder="🔎 Buscar por número/lote (ex: Q3-L12)" value="${imovelBusca}">
+      </div>
+      <div id="imovelResumo"></div>
       <div id="imoveisBody"></div>
     `}
   `;
@@ -1602,23 +1647,60 @@ function renderImoveis(){
     toast(`${ids.length} lote(s) excluído(s).`);
   });
 
+  // Feature 4: legenda visual dos empreendimentos
+  const legenda = document.getElementById('produtoLegenda');
+  legenda.innerHTML = state.produtos.map(p=>`<span class="stamp ${produtoCorClass(p.id)}">${p.nome}</span>`).join(' ');
+
+  // Feature 6: sem opção "Todos" — seleção de um único empreendimento é obrigatória
   const produtoPills = document.getElementById('produtoPills');
-  produtoPills.innerHTML = ['Todos', ...state.produtos.map(p=>p.nome)].map(n=>`<button class="pill ${imovelFilter.produto===n?'active':''}" data-n="${n}">${n}</button>`).join('');
+  produtoPills.innerHTML = state.produtos.map(n=>`<button class="pill ${imovelFilter.produto===n.nome?'active':''}" data-n="${n.nome}">${n.nome}</button>`).join('');
   produtoPills.querySelectorAll('.pill').forEach(p=>p.addEventListener('click', ()=>{ imovelFilter.produto=p.dataset.n; renderImoveis(); }));
 
   const statusPills = document.getElementById('statusPills');
   statusPills.innerHTML = ['Todos', ...IMOVEL_STATUSES].map(s=>`<button class="pill ${imovelFilter.status===s?'active':''}" data-s="${s}">${s}</button>`).join('');
   statusPills.querySelectorAll('.pill').forEach(p=>p.addEventListener('click', ()=>{ imovelFilter.status=p.dataset.s; renderImoveis(); }));
 
-  let list = state.imoveis;
-  if(imovelFilter.produto!=='Todos'){
-    const prod = state.produtos.find(p=>p.nome===imovelFilter.produto);
-    list = list.filter(i=>prod && i.produtoId===prod.id);
+  // Feature 7: campo de busca por número/lote
+  const buscaInput = document.getElementById('loteBusca');
+  buscaInput.addEventListener('input', (e)=>{ imovelBusca = e.target.value; renderImovelList(); });
+
+  renderImovelList();
+}
+
+function renderImovelList(){
+  const prod = state.produtos.find(p=>p.nome===imovelFilter.produto);
+  const todosDoProduto = prod ? state.imoveis.filter(i=>i.produtoId===prod.id) : [];
+
+  // Feature 5: painel de resumo do produto selecionado
+  const resumoEl = document.getElementById('imovelResumo');
+  if(resumoEl && prod){
+    const totalLotes = todosDoProduto.length;
+    const valorTotal = todosDoProduto.reduce((s,i)=>s+Number(i.valores.valor||0),0);
+    const livres = todosDoProduto.filter(i=>i.status==='Disponível').length;
+    const reservados = todosDoProduto.filter(i=>i.status==='Reservado').length;
+    const vendidos = todosDoProduto.filter(i=>i.status==='Vendido').length;
+    const pctVendas = totalLotes ? Math.round(100*vendidos/totalLotes) : 0;
+    resumoEl.innerHTML = `
+      <div class="grid grid-4 section-block">
+        <div class="card"><div class="kpi-label">Total de lotes</div><div class="kpi-value">${totalLotes}</div></div>
+        <div class="card"><div class="kpi-label">Valor total</div><div class="kpi-value" style="font-size:20px;">${fmtMoney(valorTotal)}</div></div>
+        <div class="card"><div class="kpi-label">Livres / Reservados</div><div class="kpi-value" style="font-size:22px;">${livres} / ${reservados}</div></div>
+        <div class="card"><div class="kpi-label">% Vendido</div><div class="kpi-value">${pctVendas}%</div><div class="kpi-sub">${vendidos} vendido(s)</div></div>
+      </div>
+    `;
+  }else if(resumoEl){
+    resumoEl.innerHTML = '';
   }
+
+  let list = todosDoProduto;
   if(imovelFilter.status!=='Todos') list = list.filter(i=>i.status===imovelFilter.status);
+  if(imovelBusca.trim()){
+    const q = imovelBusca.trim().toLowerCase();
+    list = list.filter(i => (i.codigo||'').toLowerCase().includes(q) || String(i.endereco.lote||'').toLowerCase().includes(q) || String(i.endereco.quadra||'').toLowerCase().includes(q));
+  }
 
   const body = document.getElementById('imoveisBody');
-  body.innerHTML = list.length ? `<div class="imoveis-grid">${list.map(im=>imovelCardHtml(im, imovelSelectMode)).join('')}</div>` : emptyState('Nenhum lote encontrado', 'Ajuste os filtros, cadastre um lote ou importe uma planilha.');
+  body.innerHTML = list.length ? `<div class="imoveis-grid">${list.map(im=>imovelCardHtml(im, imovelSelectMode)).join('')}</div>` : emptyState('Nenhum lote encontrado', 'Ajuste os filtros, a busca, cadastre um lote ou importe uma planilha.');
   bindImovelCardClicks(imovelSelectMode);
 }
 
@@ -1973,7 +2055,7 @@ function abrirFichaImovel(id){
         </div>
         <div class="ficha-content">
           <div class="ficha-header">
-            <div class="logo">${state.config.logo?`<img src="${state.config.logo}">`:''}</div>
+            <div class="logo">${prod&&prod.logo?`<img src="${prod.logo}">`:(state.config.logo?`<img src="${state.config.logo}">`:'')}</div>
             <div>
               <div class="ficha-title">Ficha do Lote — ${im.codigo}</div>
               <div class="ficha-sub">${state.config.nome||'ImobiCRM'} · emitido em ${fmtDate(todayISO())}</div>
@@ -2193,25 +2275,74 @@ function renderFinanceiro(){
 
   const cBody = document.getElementById('comissoesBody');
   cBody.innerHTML = comissoes.length ? `
-    <table><thead><tr><th>Imóvel</th><th>Cliente</th><th>Valor</th><th>%</th><th>Parceiro</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data recebim.</th></tr></thead>
+    <table><thead><tr><th>Imóvel</th><th>Cliente</th><th>Valor</th><th>%</th><th>Parceiro</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data recebim.</th><th></th></tr></thead>
     <tbody>${comissoes.map(cm=>{
       const im = state.imoveis.find(i=>i.id===cm.imovelId);
       const cl = state.clientes.find(c=>c.id===cm.clienteId);
-      return `<tr><td>${im?im.codigo:'—'}</td><td>${cl?cl.nome:'—'}</td><td class="mono">${fmtMoney(cm.valor)}</td><td class="mono">${cm.percentual||0}%</td><td>${cm.parceiro||'—'}</td><td>${stamp(cm.status)}</td>${canManageTeam()?`<td>${corretorNome(cm.corretorId)}</td>`:''}<td class="mono">${fmtDate(cm.dataRecebimento)}</td></tr>`;
+      return `<tr>
+        <td>${im?im.codigo:'—'}</td><td>${cl?cl.nome:'—'}</td><td class="mono">${fmtMoney(cm.valor)}</td><td class="mono">${cm.percentual||0}%</td><td>${cm.parceiro||'—'}</td><td>${stamp(cm.status)}</td>${canManageTeam()?`<td>${corretorNome(cm.corretorId)}</td>`:''}<td class="mono">${fmtDate(cm.dataRecebimento)}</td>
+        <td style="white-space:nowrap;">
+          ${cm.status!=='Recebido'?`<button class="btn-sm btn-outline fin-marcar-recebido" data-id="${cm.id}" title="Marcar como recebido">✓</button>`:''}
+          <button class="btn-sm btn-outline fin-editar" data-tipo="comissao" data-id="${cm.id}">✎</button>
+          <button class="btn-sm btn-danger fin-excluir" data-tipo="comissoes" data-id="${cm.id}">🗑</button>
+        </td>
+      </tr>`;
     }).join('')}</tbody></table>
   ` : emptyState('Nenhuma comissão registrada', 'Registre comissões de vendas fechadas.');
 
   const rBody = document.getElementById('receitasBody');
   rBody.innerHTML = receitas.length ? `
-    <table><thead><tr><th>Descrição</th><th>Origem</th><th>Valor</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data</th></tr></thead>
-    <tbody>${receitas.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(r=>`<tr><td>${r.descricao}</td><td>${r.origem}</td><td class="mono">${fmtMoney(r.valor)}</td>${canManageTeam()?`<td>${corretorNome(r.corretorId)}</td>`:''}<td class="mono">${fmtDate(r.data)}</td></tr>`).join('')}</tbody></table>
+    <table><thead><tr><th>Descrição</th><th>Origem</th><th>Valor</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data</th><th></th></tr></thead>
+    <tbody>${receitas.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(r=>`<tr>
+      <td>${r.descricao}</td><td>${r.origem}</td><td class="mono">${fmtMoney(r.valor)}</td>${canManageTeam()?`<td>${corretorNome(r.corretorId)}</td>`:''}<td class="mono">${fmtDate(r.data)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm btn-outline fin-editar" data-tipo="receita" data-id="${r.id}">✎</button>
+        <button class="btn-sm btn-danger fin-excluir" data-tipo="receitas" data-id="${r.id}">🗑</button>
+      </td>
+    </tr>`).join('')}</tbody></table>
   ` : emptyState('Nenhuma receita registrada', '');
 
   const dBody = document.getElementById('despesasBody');
   dBody.innerHTML = despesas.length ? `
-    <table><thead><tr><th>Descrição</th><th>Categoria</th><th>Valor</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data</th></tr></thead>
-    <tbody>${despesas.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(d=>`<tr><td>${d.descricao}</td><td>${d.categoria}</td><td class="mono">${fmtMoney(d.valor)}</td>${canManageTeam()?`<td>${corretorNome(d.corretorId)}</td>`:''}<td class="mono">${fmtDate(d.data)}</td></tr>`).join('')}</tbody></table>
+    <table><thead><tr><th>Descrição</th><th>Categoria</th><th>Valor</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Data</th><th></th></tr></thead>
+    <tbody>${despesas.slice().sort((a,b)=>b.data.localeCompare(a.data)).map(d=>`<tr>
+      <td>${d.descricao}</td><td>${d.categoria}</td><td class="mono">${fmtMoney(d.valor)}</td>${canManageTeam()?`<td>${corretorNome(d.corretorId)}</td>`:''}<td class="mono">${fmtDate(d.data)}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn-sm btn-outline fin-editar" data-tipo="despesa" data-id="${d.id}">✎</button>
+        <button class="btn-sm btn-danger fin-excluir" data-tipo="despesas" data-id="${d.id}">🗑</button>
+      </td>
+    </tr>`).join('')}</tbody></table>
   ` : emptyState('Nenhuma despesa registrada', '');
+
+  // Feature 10: marcar comissão como recebida
+  c.querySelectorAll('.fin-marcar-recebido').forEach(btn=>btn.addEventListener('click', ()=>{
+    const cm = state.comissoes.find(x=>x.id===btn.dataset.id);
+    if(!cm) return;
+    cm.status = 'Recebido';
+    cm.dataRecebimento = todayISO();
+    save(); renderFinanceiro();
+    toast('Comissão marcada como recebida.');
+  }));
+
+  // Feature 10: editar lançamento existente
+  c.querySelectorAll('.fin-editar').forEach(btn=>btn.addEventListener('click', ()=>{
+    const tipo = btn.dataset.tipo, id = btn.dataset.id;
+    if(tipo==='comissao') openComissaoForm(state.comissoes.find(x=>x.id===id));
+    if(tipo==='receita') openReceitaDespesaForm('receita', state.receitas.find(x=>x.id===id));
+    if(tipo==='despesa') openReceitaDespesaForm('despesa', state.despesas.find(x=>x.id===id));
+  }));
+
+  // Feature 10: excluir lançamento
+  c.querySelectorAll('.fin-excluir').forEach(btn=>btn.addEventListener('click', ()=>{
+    const tabela = btn.dataset.tipo, id = btn.dataset.id;
+    if(!confirm('Excluir este lançamento permanentemente?')) return;
+    if(tabela==='comissoes') state.comissoes = state.comissoes.filter(x=>x.id!==id);
+    if(tabela==='receitas') state.receitas = state.receitas.filter(x=>x.id!==id);
+    if(tabela==='despesas') state.despesas = state.despesas.filter(x=>x.id!==id);
+    if(sb) sb.from(tabela).delete().eq('id', id).then(({error})=>{ if(error) console.error(error); });
+    save(); renderFinanceiro();
+    toast('Lançamento excluído.');
+  }));
 }
 
 function corretorFieldIfGestor(schema){
@@ -2229,7 +2360,7 @@ function resolveCorretorId(r){
   return currentUser().id;
 }
 
-function openComissaoForm(){
+function openComissaoForm(existing){
   const imovelOptions = ['(nenhum)', ...state.imoveis.map(i=>i.codigo)];
   const clienteOptions = ['(nenhum)', ...scoped(state.clientes).map(c=>c.nome)];
   const schema = corretorFieldIfGestor([
@@ -2241,29 +2372,50 @@ function openComissaoForm(){
     {key:'status', label:'Status', type:'select', options:['A receber','Recebido']},
     {key:'dataRecebimento', label:'Data de recebimento', type:'date'}
   ]);
+  const imAtual = existing && state.imoveis.find(i=>i.id===existing.imovelId);
+  const clAtual = existing && state.clientes.find(c=>c.id===existing.clienteId);
+  const data = existing ? Object.assign({}, existing, {imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', clienteNome: clAtual?clAtual.nome:'(nenhum)', corretorNome: corretorNome(existing.corretorId)}) : {status:'A receber', dataRecebimento: todayISO()};
   openModal({
-    title:'Nova comissão', schema, data:{status:'A receber', dataRecebimento: todayISO()},
+    title: existing ? 'Editar comissão' : 'Nova comissão', schema, data,
     onSave:(r)=>{
       const im = state.imoveis.find(i=>i.codigo===r.imovelCodigo);
       const cl = state.clientes.find(c=>c.nome===r.clienteNome);
-      state.comissoes.push({id:uid(), imovelId: im?im.id:null, clienteId: cl?cl.id:null, valor:r.valor, percentual:r.percentual, parceiro:r.parceiro, status:r.status, dataRecebimento:r.dataRecebimento, corretorId: resolveCorretorId(r)});
-      save(); closeModal(); renderFinanceiro(); toast('Comissão registrada.');
+      if(existing){
+        Object.assign(existing, {imovelId: im?im.id:null, clienteId: cl?cl.id:null, valor:r.valor, percentual:r.percentual, parceiro:r.parceiro, status:r.status, dataRecebimento:r.dataRecebimento, corretorId: resolveCorretorId(r)});
+        toast('Comissão atualizada.');
+      }else{
+        state.comissoes.push({id:uid(), imovelId: im?im.id:null, clienteId: cl?cl.id:null, valor:r.valor, percentual:r.percentual, parceiro:r.parceiro, status:r.status, dataRecebimento:r.dataRecebimento, corretorId: resolveCorretorId(r)});
+        toast('Comissão registrada.');
+      }
+      save(); closeModal(); renderFinanceiro();
     }
   });
 }
 
-function openReceitaDespesaForm(kind){
+function openReceitaDespesaForm(kind, existing){
   if(kind==='receita'){
     const schema = corretorFieldIfGestor([{key:'descricao', label:'Descrição'},{key:'origem', label:'Origem'},{key:'valor', label:'Valor (R$)', type:'number'},{key:'data', label:'Data', type:'date'}]);
+    const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId)}) : {data: todayISO()};
     openModal({
-      title:'Nova receita', schema, data:{data: todayISO()},
-      onSave:(r)=>{ const corretorId = resolveCorretorId(r); delete r.corretorNome; state.receitas.push(Object.assign({id:uid(), corretorId}, r)); save(); closeModal(); renderFinanceiro(); toast('Receita registrada.'); }
+      title: existing ? 'Editar receita' : 'Nova receita', schema, data,
+      onSave:(r)=>{
+        const corretorId = resolveCorretorId(r); delete r.corretorNome;
+        if(existing){ Object.assign(existing, r, {corretorId}); toast('Receita atualizada.'); }
+        else{ state.receitas.push(Object.assign({id:uid(), corretorId}, r)); toast('Receita registrada.'); }
+        save(); closeModal(); renderFinanceiro();
+      }
     });
   }else{
     const schema = corretorFieldIfGestor([{key:'descricao', label:'Descrição'},{key:'categoria', label:'Categoria', type:'select', options:['Marketing','Transporte','Assinaturas','Outros']},{key:'valor', label:'Valor (R$)', type:'number'},{key:'data', label:'Data', type:'date'}]);
+    const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId)}) : {data: todayISO()};
     openModal({
-      title:'Nova despesa', schema, data:{data: todayISO()},
-      onSave:(r)=>{ const corretorId = resolveCorretorId(r); delete r.corretorNome; state.despesas.push(Object.assign({id:uid(), corretorId}, r)); save(); closeModal(); renderFinanceiro(); toast('Despesa registrada.'); }
+      title: existing ? 'Editar despesa' : 'Nova despesa', schema, data,
+      onSave:(r)=>{
+        const corretorId = resolveCorretorId(r); delete r.corretorNome;
+        if(existing){ Object.assign(existing, r, {corretorId}); toast('Despesa atualizada.'); }
+        else{ state.despesas.push(Object.assign({id:uid(), corretorId}, r)); toast('Despesa registrada.'); }
+        save(); closeModal(); renderFinanceiro();
+      }
     });
   }
 }
@@ -2403,6 +2555,7 @@ function renderProdutos(){
 
 function openProdutoForm(existing){
   const cp = (existing && existing.condicoesPadrao) ? existing.condicoesPadrao : condicoesPadraoDefault();
+  let logoAtual = existing ? existing.logo : null;
   openModal({
     title: existing ? 'Editar produto' : 'Novo produto',
     schema:[
@@ -2416,21 +2569,51 @@ function openProdutoForm(existing){
       {key:'taxaJuros', label:'Taxa de juros mensal padrão (%)', type:'number', step:'0.01'}
     ],
     data: existing ? Object.assign({}, existing, {ativo: existing.ativo?'Ativo':'Inativo'}, cp) : Object.assign({ativo:'Ativo'}, condicoesPadraoDefault()),
-    extraHtml: `<p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Essas condições são o padrão sugerido para os lotes deste loteamento — cada lote continua editável individualmente na sua própria tela.</p>`,
+    extraHtml: `
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Essas condições são o padrão sugerido para os lotes deste loteamento — cada lote continua editável individualmente na sua própria tela.</p>
+      <div class="field">
+        <label>Logo do empreendimento (aparece no formulário público)</label>
+        <div class="logo-edit-wrap">
+          <div class="logo-preview" id="produtoLogoPreview">${logoAtual ? `<img src="${logoAtual}">` : '—'}</div>
+          <div>
+            <input type="file" id="produtoLogoFile" accept="image/*">
+            <button type="button" class="btn-sm btn-outline" id="produtoLogoRemove" style="margin-top:6px; ${logoAtual?'':'display:none;'}">Remover logo</button>
+          </div>
+        </div>
+      </div>
+    `,
     onSave: async (r)=>{
       const ativo = r.ativo === 'Ativo';
       const condicoesPadrao = {entradaPercent: r.entradaPercent!==undefined&&r.entradaPercent!==''?r.entradaPercent:10, meses: r.meses||80, taxaJuros: r.taxaJuros!==undefined&&r.taxaJuros!==''?r.taxaJuros:0.6};
       if(existing){
-        Object.assign(existing, {nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, condicoesPadrao});
+        Object.assign(existing, {nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, condicoesPadrao, logo: logoAtual});
         toast('Produto atualizado.');
       }else{
         let slug = slugify(r.nome) || uid();
         if(state.produtos.some(p=>p.slug===slug)) slug = slug + '-' + Math.floor(Math.random()*900+100);
-        state.produtos.push({ id:uid(), nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, slug, condicoesPadrao });
+        state.produtos.push({ id:uid(), nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, slug, condicoesPadrao, logo: logoAtual });
         toast('Produto cadastrado.');
       }
       save(); closeModal(); renderProdutos();
     }
+  });
+  const logoFileInput = document.getElementById('produtoLogoFile');
+  if(logoFileInput) logoFileInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      logoAtual = reader.result;
+      document.getElementById('produtoLogoPreview').innerHTML = `<img src="${logoAtual}">`;
+      document.getElementById('produtoLogoRemove').style.display = '';
+    };
+    reader.readAsDataURL(file);
+  });
+  const logoRemoveBtn = document.getElementById('produtoLogoRemove');
+  if(logoRemoveBtn) logoRemoveBtn.addEventListener('click', ()=>{
+    logoAtual = null;
+    document.getElementById('produtoLogoPreview').innerHTML = '—';
+    logoRemoveBtn.style.display = 'none';
   });
 }
 
@@ -2778,6 +2961,10 @@ function renderConfig(){
         </div>
       </div>
       <div class="field">
+        <label>Texto abaixo do logo (barra lateral)</label>
+        <input type="text" id="cfgSubtitulo" value="${state.config.subtitulo||''}" placeholder="Ex: Corretor · deixe vazio para remover">
+      </div>
+      <div class="field">
         <label>Cidades de atuação</label>
         <input type="text" id="cfgCidades" value="${state.config.cidades||''}">
       </div>
@@ -2809,6 +2996,16 @@ function renderConfig(){
     <div class="section-title">Minha conta</div>
     <div class="card section-block" style="max-width:560px;">
       <p style="font-size:12.5px; color:var(--ink-soft); margin-top:0;">Logada como <b>${sessionUser?sessionUser.email:''}</b> (${currentUser().papel}).</p>
+      <div class="field">
+        <label>Foto de perfil</label>
+        <div class="logo-edit-wrap">
+          <div class="logo-preview" id="avatarPreview">${currentProfile.avatarUrl ? `<img src="${currentProfile.avatarUrl}">` : currentProfile.nome.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>
+          <div>
+            <input type="file" id="cfgAvatarFile" accept="image/*">
+            ${currentProfile.avatarUrl ? '<button class="btn-sm btn-outline" id="cfgAvatarRemove" style="margin-top:6px;">Remover foto</button>' : ''}
+          </div>
+        </div>
+      </div>
       <div class="field"><label>Nova senha</label><input type="password" id="cfgNovaSenha" minlength="6" placeholder="mín. 6 caracteres"></div>
       <button class="btn btn-sm" id="btnTrocarSenha">Trocar senha</button>
     </div>
@@ -2890,9 +3087,36 @@ function renderConfig(){
   const removeBtn = document.getElementById('cfgLogoRemove');
   if(removeBtn) removeBtn.addEventListener('click', ()=>{ state.config.logo=null; save(); renderConfig(); renderBrand(); });
 
+  document.getElementById('cfgAvatarFile') && document.getElementById('cfgAvatarFile').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ()=>{
+      const dataUrl = reader.result;
+      const { error } = await sb.from('profiles').update({ avatar_url: dataUrl }).eq('id', currentProfile.id);
+      if(error){ alert('Erro ao salvar foto: '+error.message); return; }
+      currentProfile.avatarUrl = dataUrl;
+      const u = state.usuarios.find(x=>x.id===currentProfile.id);
+      if(u) u.avatarUrl = dataUrl;
+      renderConfig(); renderNav();
+      toast('Foto de perfil atualizada.');
+    };
+    reader.readAsDataURL(file);
+  });
+  const avatarRemoveBtn = document.getElementById('cfgAvatarRemove');
+  if(avatarRemoveBtn) avatarRemoveBtn.addEventListener('click', async ()=>{
+    const { error } = await sb.from('profiles').update({ avatar_url: null }).eq('id', currentProfile.id);
+    if(error){ alert('Erro ao remover foto: '+error.message); return; }
+    currentProfile.avatarUrl = null;
+    const u = state.usuarios.find(x=>x.id===currentProfile.id);
+    if(u) u.avatarUrl = null;
+    renderConfig(); renderNav();
+  });
+
   const btnSalvarCfg = document.getElementById('btnSalvarCfg');
   if(btnSalvarCfg) btnSalvarCfg.addEventListener('click', ()=>{
     state.config.nome = document.getElementById('cfgNome').value.trim() || 'ImobiCRM';
+    state.config.subtitulo = document.getElementById('cfgSubtitulo').value.trim();
     state.config.cidades = document.getElementById('cfgCidades').value.trim();
     state.config.meta = parseFloat(document.getElementById('cfgMeta').value)||0;
     save(); renderBrand(); renderConfig();

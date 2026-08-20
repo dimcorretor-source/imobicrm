@@ -314,8 +314,10 @@ tr:hover td{background:var(--paper-2);}
       <div class="nav-user" id="navUser"></div>
       <button id="btnTrocarUsuario">↺ Sair</button>
       Dados salvos neste navegador.
-      <button id="btnExport">⇩ Exportar dados (.json)</button>
-      <button id="btnImport">⇧ Importar dados</button>
+      <div id="sidebarExportImportWrap">
+        <button id="btnExport">⇩ Exportar dados (.json)</button>
+        <button id="btnImport">⇧ Importar dados</button>
+      </div>
       <input type="file" id="fileImport" accept="application/json" style="display:none">
     </div>
   </aside>
@@ -786,6 +788,9 @@ function renderNav(){
       : `<div class="gate-avatar">${u.nome.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase()}</div>`;
     nu.innerHTML = `${avatarHtml}<div><b>${u.nome}</b><span style="font-size:10px; color:#a39d87; text-transform:uppercase;">${u.papel}</span></div>`;
   }
+  // Exportar/Importar dados: visível apenas para o Gestor
+  const exportImportWrap = document.getElementById('sidebarExportImportWrap');
+  if(exportImportWrap) exportImportWrap.style.display = isGestor() ? '' : 'none';
 }
 
 function renderBrand(){

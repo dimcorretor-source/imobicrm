@@ -1348,10 +1348,14 @@ function openLeadDetail(id){
       lead.interacoes.push({data: todayISO(), descricao: val});
       lead.ultimoContato = todayISO();
       if(lead.roletaStatus === 'aguardando') lead.roletaStatus = 'atendido';
+    }
+
+    // Agenda o compromisso sempre que data e hora forem preenchidas — mesmo sem uma interação escrita
+    if(proxData && proxHora){
       state.compromissos.push({
         id: uid(), titulo: `Follow-up: ${lead.nome}`, tipo: proxTipo,
         data: proxData, hora: proxHora, prioridade: 'Média',
-        descricao: `Continuação do atendimento — ${val}`,
+        descricao: val ? `Continuação do atendimento — ${val}` : `Próximo contato com ${lead.nome}`,
         leadId: lead.id, imovelId: lead.imovelInteresseId||null,
         corretorId: lead.corretorId || currentUser().id, status: 'Pendente'
       });
@@ -1359,7 +1363,7 @@ function openLeadDetail(id){
     }
 
     closeModal();
-    changeLeadStatus(lead, novoStatus, ()=>{ save(); renderLeads(); toast(val ? 'Interação registrada e status atualizado.' : 'Status atualizado.'); });
+    changeLeadStatus(lead, novoStatus, ()=>{ save(); renderLeads(); toast((val||proxData) ? 'Registrado e status atualizado.' : 'Status atualizado.'); });
   });
 }
 

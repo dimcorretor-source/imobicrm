@@ -943,10 +943,15 @@ function renderDashboard(){
 
   const statusToggleHtml = !isGestor() ? `
     <div class="card section-block" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-      <label style="display:flex; align-items:center; gap:10px; cursor:pointer; margin:0;">
-        <input type="checkbox" id="dashDisponivelRoleta" ${currentProfile.disponivelRoleta?'checked':''} style="width:20px; height:20px;">
-        <span>${currentProfile.disponivelRoleta ? '🟢 Online — recebendo leads' : '🔴 Offline — não recebendo leads'}</span>
-      </label>
+      <span style="font-size:13px; color:var(--ink-soft);">Status de disponibilidade para receber leads:</span>
+      <button id="dashDisponivelRoleta" style="
+        border:none; border-radius:20px; padding:9px 20px; font-size:13px; font-weight:700; cursor:pointer;
+        color:#fff; background:${currentProfile.disponivelRoleta ? 'var(--verde)' : 'var(--vermelho)'};
+        display:inline-flex; align-items:center; gap:8px;
+      ">
+        <span style="width:9px; height:9px; border-radius:50%; background:#fff; display:inline-block;"></span>
+        ${currentProfile.disponivelRoleta ? 'Online' : 'Offline'}
+      </button>
     </div>
   ` : '';
 
@@ -961,10 +966,10 @@ function renderDashboard(){
   bindImovelCardClicks();
   c.querySelectorAll('.dash-lead-row').forEach(row=>row.addEventListener('click', ()=>openLeadDetail(row.dataset.id)));
   const dashToggle = document.getElementById('dashDisponivelRoleta');
-  if(dashToggle) dashToggle.addEventListener('change', async (e)=>{
-    const val = e.target.checked;
+  if(dashToggle) dashToggle.addEventListener('click', async ()=>{
+    const val = !currentProfile.disponivelRoleta;
     const { error } = await sb.from('profiles').update({ disponivel_roleta: val }).eq('id', currentProfile.id);
-    if(error){ alert('Erro ao atualizar disponibilidade: '+error.message); e.target.checked = !val; return; }
+    if(error){ alert('Erro ao atualizar disponibilidade: '+error.message); return; }
     currentProfile.disponivelRoleta = val;
     const u = state.usuarios.find(x=>x.id===currentProfile.id);
     if(u) u.disponivelRoleta = val;

@@ -941,7 +941,7 @@ function renderDashboard(){
   const destaqueImoveis = state.imoveis.filter(i=>i.destaque);
   const destHtml = destaqueImoveis.length ? `<div class="imoveis-grid">${destaqueImoveis.map(im=>imovelCardHtml(im)).join('')}</div>` : emptyState('Nenhum lote em destaque', 'Marque lotes como destaque na aba Lotes.');
 
-  const statusToggleHtml = !isGestor() ? `
+  const statusToggleHtml = `
     <div class="card section-block" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
       <span style="font-size:13px; color:var(--ink-soft);">Status de disponibilidade para receber leads:</span>
       <button id="dashDisponivelRoleta" style="
@@ -953,7 +953,7 @@ function renderDashboard(){
         ${currentProfile.disponivelRoleta ? 'Online' : 'Offline'}
       </button>
     </div>
-  ` : '';
+  `;
 
   c.innerHTML = `
     ${statusToggleHtml}

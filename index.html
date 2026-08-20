@@ -919,7 +919,7 @@ function renderDashboard(){
   const ultimosLeads = [...leads].sort((a,b)=>b.dataCriacao.localeCompare(a.dataCriacao)).slice(0,5);
   const leadsHtml = ultimosLeads.length ? `
     <table><thead><tr><th>Nome</th><th>Origem</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Criado em</th></tr></thead>
-    <tbody>${ultimosLeads.map(l=>`<tr><td>${l.nome}</td><td>${l.origem}</td><td>${stamp(l.status)}</td>${canManageTeam()?`<td>${corretorNome(l.corretorId)}</td>`:''}<td class="mono">${fmtDate(l.dataCriacao)}</td></tr>`).join('')}</tbody></table>
+    <tbody>${ultimosLeads.map(l=>`<tr class="dash-lead-row" data-id="${l.id}" style="cursor:pointer;"><td>${l.nome}</td><td>${l.origem}</td><td>${stamp(l.status)}</td>${canManageTeam()?`<td>${corretorNome(l.corretorId)}</td>`:''}<td class="mono">${fmtDate(l.dataCriacao)}</td></tr>`).join('')}</tbody></table>
   ` : emptyState('Nenhum lead ainda', 'Cadastre seu primeiro lead para começar a acompanhar o funil.');
 
   const proximosComp = [...compromissos].filter(cm=>cm.status==='Pendente').sort((a,b)=>(a.data+a.hora).localeCompare(b.data+b.hora)).slice(0,5);
@@ -959,6 +959,7 @@ function renderDashboard(){
     <div class="section-block"><div class="section-title">Lotes em destaque</div>${destHtml}</div>
   `;
   bindImovelCardClicks();
+  c.querySelectorAll('.dash-lead-row').forEach(row=>row.addEventListener('click', ()=>openLeadDetail(row.dataset.id)));
   const dashToggle = document.getElementById('dashDisponivelRoleta');
   if(dashToggle) dashToggle.addEventListener('change', async (e)=>{
     const val = e.target.checked;
@@ -1285,17 +1286,16 @@ function openLeadDetail(id){
         </div>
 
         <div class="field">
-          <label>Nova interação</label>
+          <label>Nova interação (opcional)</label>
           <input type="text" id="novaInteracao" placeholder="Ex: Ligação de retorno, enviado material..." style="margin-bottom:8px;">
           <div class="card" style="padding:12px 14px; border-color:var(--azul);">
-            <label style="font-size:11px; font-weight:600; color:var(--azul); text-transform:uppercase; display:block; margin-bottom:8px;">📅 Próximo contato (obrigatório)</label>
+            <label style="font-size:11px; font-weight:600; color:var(--azul); text-transform:uppercase; display:block; margin-bottom:8px;">📅 Próximo contato (obrigatório se preencher a interação)</label>
             <div class="grid grid-3">
               <div class="field" style="margin-bottom:0;"><label>Data</label><input type="date" id="proxData" value="${todayISO()}"></div>
               <div class="field" style="margin-bottom:0;"><label>Hora</label><input type="time" id="proxHora" value="${new Date().toTimeString().slice(0,5)}"></div>
               <div class="field" style="margin-bottom:0;"><label>Tipo</label><select id="proxTipo"><option>Telefone</option><option>WhatsApp</option><option>Presencial</option><option>E-mail</option></select></div>
             </div>
           </div>
-          <button class="btn btn-sm" id="addInteracao" style="margin-top:10px;">Registrar e agendar</button>
         </div>
 
         <div style="margin-top:10px;">
@@ -1318,29 +1318,6 @@ function openLeadDetail(id){
   document.getElementById('editLead').addEventListener('click', ()=>{ closeModal(); openLeadForm(lead); });
   const verImovelBtn = document.getElementById('verImovelLead');
   if(verImovelBtn) verImovelBtn.addEventListener('click', ()=>{ closeModal(); openImovelDetail(lead.imovelInteresseId); });
-  document.getElementById('addInteracao').addEventListener('click', ()=>{
-    const val = document.getElementById('novaInteracao').value.trim();
-    const proxData = document.getElementById('proxData').value;
-    const proxHora = document.getElementById('proxHora').value;
-    const proxTipo = document.getElementById('proxTipo').value;
-    if(!val){ alert('Descreva o que foi feito nessa interação.'); return; }
-    if(!proxData || !proxHora){ alert('Data e hora do próximo contato são obrigatórias.'); return; }
-    lead.interacoes = lead.interacoes || [];
-    lead.interacoes.push({data: todayISO(), descricao: val});
-    lead.ultimoContato = todayISO();
-    if(lead.roletaStatus === 'aguardando') lead.roletaStatus = 'atendido';
-    state.compromissos.push({
-      id: uid(), titulo: `Follow-up: ${lead.nome}`, tipo: proxTipo,
-      data: proxData, hora: proxHora, prioridade: 'Média',
-      descricao: `Continuação do atendimento — ${val}`,
-      leadId: lead.id, imovelId: lead.imovelInteresseId||null,
-      corretorId: lead.corretorId || currentUser().id, status: 'Pendente'
-    });
-    save();
-    checkReminders();
-    toast('Interação registrada e próximo contato agendado.');
-    openLeadDetail(id);
-  });
   const delLeadBtn = document.getElementById('delLead');
   if(delLeadBtn) delLeadBtn.addEventListener('click', ()=>{
     if(!confirm('Excluir este lead permanentemente?')) return;
@@ -1348,10 +1325,36 @@ function openLeadDetail(id){
     if(sb) sb.from('leads').delete().eq('id', id).then(({error})=>{ if(error) console.error(error); });
     save(); closeModal(); renderLeads();
   });
+  // Botão único: salva status + (se preenchida) a interação e o agendamento, tudo de uma vez
   document.getElementById('saveDetail').addEventListener('click', ()=>{
     const novoStatus = document.getElementById('statusSelect').value;
+    const val = document.getElementById('novaInteracao').value.trim();
+    const proxData = document.getElementById('proxData').value;
+    const proxHora = document.getElementById('proxHora').value;
+    const proxTipo = document.getElementById('proxTipo').value;
+
+    if(val && (!proxData || !proxHora)){
+      alert('Data e hora do próximo contato são obrigatórias quando você registra uma interação.');
+      return;
+    }
+
+    if(val){
+      lead.interacoes = lead.interacoes || [];
+      lead.interacoes.push({data: todayISO(), descricao: val});
+      lead.ultimoContato = todayISO();
+      if(lead.roletaStatus === 'aguardando') lead.roletaStatus = 'atendido';
+      state.compromissos.push({
+        id: uid(), titulo: `Follow-up: ${lead.nome}`, tipo: proxTipo,
+        data: proxData, hora: proxHora, prioridade: 'Média',
+        descricao: `Continuação do atendimento — ${val}`,
+        leadId: lead.id, imovelId: lead.imovelInteresseId||null,
+        corretorId: lead.corretorId || currentUser().id, status: 'Pendente'
+      });
+      checkReminders();
+    }
+
     closeModal();
-    changeLeadStatus(lead, novoStatus, ()=>renderLeads());
+    changeLeadStatus(lead, novoStatus, ()=>{ save(); renderLeads(); toast(val ? 'Interação registrada e status atualizado.' : 'Status atualizado.'); });
   });
 }
 
@@ -1435,34 +1438,91 @@ function importLeadsFromExcel(file){
   };
   reader.readAsArrayBuffer(file);
 }
+function normalizeTelefone(tel){
+  return String(tel||'').replace(/\D/g,'');
+}
+function encontrarLeadDuplicado(m){
+  const telNorm = normalizeTelefone(m.telefone);
+  const emailNorm = String(m.email||'').trim().toLowerCase();
+  return state.leads.find(l=>{
+    if(telNorm && normalizeTelefone(l.telefone)===telNorm) return true;
+    if(emailNorm && String(l.email||'').trim().toLowerCase()===emailNorm) return true;
+    return false;
+  });
+}
 function confirmImportLeads(mapped){
+  // Feature: detecta duplicados (por telefone ou e-mail) e identifica se já pertencem a outro corretor
+  const analisados = mapped.map(m=>{
+    const dup = encontrarLeadDuplicado(m);
+    return { m, dup, outroCorretor: dup && dup.corretorId && dup.corretorId !== currentUser().id };
+  });
+  const novos = analisados.filter(a=>!a.dup).length;
+  const duplicados = analisados.filter(a=>a.dup).length;
+  const deOutroCorretor = analisados.filter(a=>a.outroCorretor);
+
   const schema = [];
-  if(isGestor()) schema.push({key:'corretorNome', label:'Atribuir todos ao corretor', type:'select', options: state.usuarios.map(u=>u.nome)});
+  if(isGestor() || isGerente()) schema.push({key:'corretorNome', label:'Atribuir todos ao corretor', type:'select', options: (isGestor()?state.usuarios:state.usuarios.filter(u=>teamMemberIds().includes(u.id))).map(u=>u.nome)});
+  // Feature: escolher o empreendimento de destino para os leads importados
+  schema.push({key:'produtoNome', label:'Empreendimento (produto) de destino', type:'select', options:['(nenhum)', ...state.produtos.map(p=>p.nome)]});
+
+  const avisoDuplicados = duplicados ? `
+    <div class="card" style="border-color:var(--latao); margin-top:10px;">
+      <p style="font-size:12.5px; margin:0 0 6px 0;"><b>${duplicados}</b> contato(s) já existem no sistema (mesmo telefone/e-mail) — serão <b>atualizados</b>, não duplicados.</p>
+      ${deOutroCorretor.length ? `
+        <p style="font-size:12.5px; color:var(--vermelho); margin:8px 0 6px 0;"><b>${deOutroCorretor.length}</b> desses já estão sendo atendidos por outro corretor: ${deOutroCorretor.map(a=>`${a.m.nome} (com ${corretorNome(a.dup.corretorId)})`).join(', ')}.</p>
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; cursor:pointer;">
+          <input type="checkbox" id="importTransferirDuplicados" style="width:16px; height:16px;">
+          Transferir esses lead(s) para o corretor selecionado acima
+        </label>
+      ` : ''}
+    </div>
+  ` : '';
+
   openModal({
     title: `Importar ${mapped.length} lead(s) da planilha`,
-    schema, data:{corretorNome: currentUser().nome},
-    extraHtml: `<p style="font-size:12.5px; color:var(--ink-soft);">Encontrei <b>${mapped.length}</b> linha(s) com nome preenchido. Colunas não reconhecidas (origem, tipo etc.) usam um valor padrão e podem ser ajustadas depois em cada lead.</p>`,
+    schema, data:{corretorNome: currentUser().nome, produtoNome:'(nenhum)'},
+    extraHtml: `<p style="font-size:12.5px; color:var(--ink-soft);">Encontrei <b>${mapped.length}</b> linha(s) com nome preenchido — <b>${novos}</b> novo(s). Colunas não reconhecidas (origem, tipo etc.) usam um valor padrão e podem ser ajustadas depois em cada lead.</p>${avisoDuplicados}`,
     onSave:(r)=>{
       let corretorId = currentUser().id;
-      if(isGestor() && r.corretorNome){
+      if((isGestor()||isGerente()) && r.corretorNome){
         const u = state.usuarios.find(x=>x.nome===r.corretorNome);
         if(u) corretorId = u.id;
       }
-      mapped.forEach(m=>{
-        state.leads.push({
-          id: uid(), nome:String(m.nome||'').trim(), telefone:String(m.telefone||''), email:String(m.email||''),
-          origem: LEAD_ORIGENS.includes(m.origem)?m.origem:'Outros',
-          tipo: LEAD_TIPOS.includes(m.tipo)?m.tipo:'Comprador',
-          orcamento: parseFloat(m.orcamento)||0,
-          bairrosInteresse: String(m.bairrosInteresse||''),
-          tipoImovelDesejado: String(m.tipoImovelDesejado||''),
-          observacoes: String(m.observacoes||''),
-          imovelInteresseId: null,
-          status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
-        });
+      const prodSel = state.produtos.find(p=>p.nome===r.produtoNome);
+      const produtoId = prodSel ? prodSel.id : null;
+      const transferirDuplicados = document.getElementById('importTransferirDuplicados');
+      const podeTransferir = transferirDuplicados ? transferirDuplicados.checked : false;
+
+      let criados = 0, atualizados = 0;
+      analisados.forEach(({m, dup, outroCorretor})=>{
+        if(dup){
+          // Atualiza o lead existente em vez de duplicar
+          dup.nome = String(m.nome||dup.nome).trim();
+          if(m.telefone) dup.telefone = String(m.telefone);
+          if(m.email) dup.email = String(m.email);
+          if(m.bairrosInteresse) dup.bairrosInteresse = String(m.bairrosInteresse);
+          if(m.tipoImovelDesejado) dup.tipoImovelDesejado = String(m.tipoImovelDesejado);
+          if(m.observacoes) dup.observacoes = (dup.observacoes?dup.observacoes+' | ':'') + String(m.observacoes);
+          if(produtoId) dup.produtoId = produtoId;
+          if(!outroCorretor || podeTransferir) dup.corretorId = corretorId;
+          atualizados++;
+        }else{
+          state.leads.push({
+            id: uid(), nome:String(m.nome||'').trim(), telefone:String(m.telefone||''), email:String(m.email||''),
+            origem: LEAD_ORIGENS.includes(m.origem)?m.origem:'Outros',
+            tipo: LEAD_TIPOS.includes(m.tipo)?m.tipo:'Comprador',
+            orcamento: parseFloat(m.orcamento)||0,
+            bairrosInteresse: String(m.bairrosInteresse||''),
+            tipoImovelDesejado: String(m.tipoImovelDesejado||''),
+            observacoes: String(m.observacoes||''),
+            imovelInteresseId: null, produtoId,
+            status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
+          });
+          criados++;
+        }
       });
       save(); closeModal(); renderLeads();
-      toast(`${mapped.length} lead(s) importado(s).`);
+      toast(`${criados} lead(s) novo(s), ${atualizados} atualizado(s).`);
     }
   });
 }

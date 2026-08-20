@@ -794,9 +794,16 @@ function tempoSemInteracaoTexto(lead){
   return `${Math.floor(dias/365)} anos`;
 }
 
+let pendenciaCorretorFilter = 'Todos';
+
 function renderPendencias(){
   const c = document.getElementById('content');
-  const leadsComPendencia = scoped(state.leads)
+  let base = scoped(state.leads);
+  if(canManageTeam() && pendenciaCorretorFilter!=='Todos'){
+    const u = state.usuarios.find(x=>x.nome===pendenciaCorretorFilter);
+    base = base.filter(l=>u && l.corretorId===u.id);
+  }
+  const leadsComPendencia = base
     .map(l=>({lead:l, info:leadPendenciaInfo(l)}))
     .filter(x=>x.info)
     .sort((a,b)=>b.info.dias-a.info.dias);
@@ -804,6 +811,7 @@ function renderPendencias(){
   c.innerHTML = `
     <div class="section-title"><span>Pendências</span></div>
     <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px;">Todo lead ativo precisa de uma próxima ação agendada. Sem isso — ou com um agendamento já vencido — o lead cai aqui na hora. Abra o lead e registre/agende a próxima ação para tirá-lo da lista.</p>
+    ${canManageTeam() ? `<div class="pillbar" id="pendCorretorPills"></div>` : ''}
     ${leadsComPendencia.length ? `
       <table><thead><tr><th>Lead</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Motivo</th><th>Tempo</th><th></th></tr></thead>
       <tbody>${leadsComPendencia.map(({lead,info})=>`
@@ -818,6 +826,13 @@ function renderPendencias(){
       `).join('')}</tbody></table>
     ` : emptyState('Nenhuma pendência 🎉', 'Todos os leads estão com interações em dia.')}
   `;
+  if(canManageTeam()){
+    // Gestor vê todos os corretores/gerentes; Gerente vê só a própria imobiliária
+    const nomes = isGestor() ? state.usuarios.map(u=>u.nome) : state.usuarios.filter(u=>teamMemberIds().includes(u.id)).map(u=>u.nome);
+    const cp = document.getElementById('pendCorretorPills');
+    cp.innerHTML = ['Todos', ...nomes].map(n=>`<button class="pill ${pendenciaCorretorFilter===n?'active':''}" data-n="${n}">${n}</button>`).join('');
+    cp.querySelectorAll('.pill').forEach(p=>p.addEventListener('click', ()=>{ pendenciaCorretorFilter=p.dataset.n; renderPendencias(); }));
+  }
   c.querySelectorAll('.pend-abrir').forEach(btn=>btn.addEventListener('click', ()=>openLeadDetail(btn.dataset.id)));
 }
 

@@ -750,6 +750,7 @@ async function boot(){
 ============================================================ */
 const ALL_VIEWS = [
   {id:'dashboard', label:'Painel', icon:'◆'},
+  {id:'pendencias', label:'Pendências', icon:'⚠'},
   {id:'produtos', label:'Produtos', icon:'▥', gestorOnly:true},
   {id:'leads', label:'Leads', icon:'☍'},
   {id:'clientes', label:'Clientes', icon:'▣'},
@@ -764,12 +765,70 @@ const ALL_VIEWS = [
 ];
 let currentView = 'dashboard';
 
+// Retorna o motivo da pendência ({tipo, dias}) ou null se o lead estiver com uma próxima ação agendada em dia.
+// Regra: todo lead precisa ter um próximo compromisso agendado (futuro). Sem isso, é pendência na hora — não espera dias.
+function leadPendenciaInfo(lead){
+  if(['Fechou','Perdido'].includes(lead.status)) return null;
+  const hoje = todayISO();
+  const agoraHora = new Date().toTimeString().slice(0,5);
+  const compsDoLead = state.compromissos.filter(cm=>cm.leadId===lead.id && cm.status==='Pendente');
+  const proximoFuturo = compsDoLead.find(cm=>cm.data > hoje || (cm.data===hoje && cm.hora > agoraHora));
+  if(proximoFuturo) return null; // tem próxima ação agendada e ainda não venceu — está em dia
+
+  const compVencido = compsDoLead.find(cm=>cm.data < hoje || (cm.data===hoje && cm.hora <= agoraHora));
+  if(compVencido) return {tipo:'agendamento vencido', dias: daysBetween(compVencido.data, hoje)};
+
+  // Nunca teve nenhum agendamento registrado — pendência imediata
+  const ref = lead.ultimoContato || lead.dataCriacao;
+  return {tipo:'sem agendamento', dias: daysBetween(ref, hoje)};
+}
+// Texto amigável do tempo sem interação (dias/semanas/meses/anos)
+function tempoSemInteracaoTexto(lead){
+  const ref = lead.ultimoContato || lead.dataCriacao;
+  const dias = daysBetween(ref, todayISO());
+  if(dias <= 0) return 'hoje';
+  if(dias === 1) return '1 dia';
+  if(dias < 14) return `${dias} dias`;
+  if(dias < 60) return `${Math.floor(dias/7)} semanas`;
+  if(dias < 730) return `${Math.floor(dias/30)} meses`;
+  return `${Math.floor(dias/365)} anos`;
+}
+
+function renderPendencias(){
+  const c = document.getElementById('content');
+  const leadsComPendencia = scoped(state.leads)
+    .map(l=>({lead:l, info:leadPendenciaInfo(l)}))
+    .filter(x=>x.info)
+    .sort((a,b)=>b.info.dias-a.info.dias);
+
+  c.innerHTML = `
+    <div class="section-title"><span>Pendências</span></div>
+    <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-8px;">Todo lead ativo precisa de uma próxima ação agendada. Sem isso — ou com um agendamento já vencido — o lead cai aqui na hora. Abra o lead e registre/agende a próxima ação para tirá-lo da lista.</p>
+    ${leadsComPendencia.length ? `
+      <table><thead><tr><th>Lead</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Motivo</th><th>Tempo</th><th></th></tr></thead>
+      <tbody>${leadsComPendencia.map(({lead,info})=>`
+        <tr>
+          <td>${lead.nome}</td>
+          <td>${stamp(lead.status)}</td>
+          ${canManageTeam()?`<td>${corretorNome(lead.corretorId)}</td>`:''}
+          <td><span class="stamp s-vermelho">${info.tipo==='agendamento vencido'?'⏰ Agendamento vencido':'📅 Sem próxima ação agendada'}</span></td>
+          <td class="mono priority-alta">${info.dias} dia(s)</td>
+          <td><button class="btn-sm btn-outline pend-abrir" data-id="${lead.id}">Abrir</button></td>
+        </tr>
+      `).join('')}</tbody></table>
+    ` : emptyState('Nenhuma pendência 🎉', 'Todos os leads estão com interações em dia.')}
+  `;
+  c.querySelectorAll('.pend-abrir').forEach(btn=>btn.addEventListener('click', ()=>openLeadDetail(btn.dataset.id)));
+}
+
 function renderNav(){
   const views = ALL_VIEWS.filter(v=>(!v.gestorOnly || isGestor()) && (!v.teamOnly || canManageTeam()));
+  const qtdPendencias = scoped(state.leads).filter(l=>leadPendenciaInfo(l)).length;
   const nav = document.getElementById('navList');
   nav.innerHTML = views.map(v => `
     <button class="nav-item ${v.id===currentView?'active':''}" data-view="${v.id}">
       <span class="nav-icon">${v.icon}</span> ${v.label}
+      ${v.id==='pendencias' && qtdPendencias ? `<span style="margin-left:auto; background:var(--vermelho); color:#fff; border-radius:10px; font-size:10.5px; font-weight:700; padding:1px 7px;">${qtdPendencias}</span>` : ''}
     </button>
   `).join('');
   nav.querySelectorAll('.nav-item').forEach(btn=>{
@@ -822,7 +881,7 @@ function renderAll(){
   const c = document.getElementById('content');
   c.innerHTML = '';
   const renderers = {
-    dashboard: renderDashboard, produtos: renderProdutos, leads: renderLeads, clientes: renderClientes,
+    dashboard: renderDashboard, pendencias: renderPendencias, produtos: renderProdutos, leads: renderLeads, clientes: renderClientes,
     imoveis: renderImoveis, agenda: renderAgenda, financeiro: renderFinanceiro,
     relatorios: renderRelatorios, equipe: renderEquipe, imobiliarias: renderImobiliarias, roleta: renderRoleta, config: renderConfig
   };
@@ -1152,8 +1211,10 @@ function renderLeads(){
   }
   body.innerHTML = `
     <div class="table-scroll">
-    <table><thead><tr>${leadSelectMode?'<th></th>':''}<th>Nome</th><th>Contato</th><th>Origem</th><th>Tipo</th><th>Orçamento</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Último contato</th><th></th></tr></thead>
-    <tbody>${filtered.map(l=>`
+    <table><thead><tr>${leadSelectMode?'<th></th>':''}<th>Nome</th><th>Contato</th><th>Origem</th><th>Tipo</th><th>Orçamento</th><th>Status</th>${canManageTeam()?'<th>Corretor</th>':''}<th>Sem interação há</th><th></th></tr></thead>
+    <tbody>${filtered.map(l=>{
+      const pend = leadPendenciaInfo(l);
+      return `
       <tr>
         ${leadSelectMode?`<td><input type="checkbox" class="lead-select" data-id="${l.id}" ${leadSelected.has(l.id)?'checked':''} style="width:18px; height:18px; cursor:pointer;"></td>`:''}
         <td><a href="#" class="lead-open" data-id="${l.id}" style="color:var(--ink); font-weight:600; text-decoration:none;">${l.nome}</a> ${roletaBadgeHtml(l)}</td>
@@ -1163,10 +1224,10 @@ function renderLeads(){
         <td class="mono">${l.orcamento?fmtMoney(l.orcamento):'—'}</td>
         <td>${stamp(l.status)}</td>
         ${canManageTeam()?`<td>${corretorNome(l.corretorId)}</td>`:''}
-        <td class="mono">${fmtDate(l.ultimoContato)}</td>
+        <td>${pend?`<span class="stamp s-vermelho" title="${pend.tipo}">⚠ ${tempoSemInteracaoTexto(l)}</span>`:`<span class="mono" style="color:var(--ink-soft);">${tempoSemInteracaoTexto(l)}</span>`}</td>
         <td><button class="btn-sm btn-outline lead-open" data-id="${l.id}">Abrir</button></td>
       </tr>
-    `).join('')}</tbody></table>
+    `;}).join('')}</tbody></table>
     </div>
   `;
   if(leadSelectMode){
@@ -1277,7 +1338,7 @@ function openLeadDetail(id){
       <div class="modal">
         <button class="btn-sm btn-outline modal-close" id="closeDetail">Fechar</button>
         <h3>${lead.nome}</h3>
-        <div style="margin-bottom:14px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}</div>
+        <div style="margin-bottom:14px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
         <div class="grid grid-2" style="margin-bottom:16px; font-size:13px;">
           <div><b>Telefone:</b> ${lead.telefone||'—'}</div>
           <div><b>E-mail:</b> ${lead.email||'—'}</div>

@@ -1302,6 +1302,10 @@ function openEnviarRemarketingForm(){
     data: {},
     extraHtml: `
       <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Vai para: ${nomesSelecionados}</p>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-4px;">
+        Dica: escreva <b>{nome}</b> em qualquer parte da mensagem que cada pessoa recebe com o próprio nome dela no lugar — não precisa escrever nome por nome.
+        <button type="button" class="btn-sm btn-outline" id="remktInserirNome" style="margin-left:6px;">+ inserir {nome}</button>
+      </p>
       <div class="field">
         <label>Foto (opcional, vai anexada à mensagem)</label>
         <div class="logo-edit-wrap">
@@ -1328,6 +1332,21 @@ function openEnviarRemarketingForm(){
     };
     reader.readAsDataURL(file);
   });
+  const btnInserirNome = document.getElementById('remktInserirNome');
+  if(btnInserirNome) btnInserirNome.addEventListener('click', ()=>{
+    const ta = document.getElementById('ff_mensagem');
+    if(!ta) return;
+    const inicio = ta.selectionStart||0, fim = ta.selectionEnd||0;
+    ta.value = ta.value.slice(0,inicio) + '{nome}' + ta.value.slice(fim);
+    ta.focus();
+    ta.selectionStart = ta.selectionEnd = inicio + 6;
+  });
+}
+
+// Troca {nome} (em qualquer variação de maiúsculas/minúsculas) pelo primeiro nome do lead.
+function personalizarMensagem(mensagem, lead){
+  const primeiroNome = (lead.nome||'').trim().split(' ')[0] || 'cliente';
+  return mensagem.replace(/\{nome\}/gi, primeiroNome);
 }
 
 async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
@@ -1345,7 +1364,7 @@ async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
       lead_id: l.id,
       telefone: l.telefone,
       nome: l.nome,
-      mensagem,
+      mensagem: personalizarMensagem(mensagem, l),
       foto_base64: fotoDataUrl || null,
       status: 'pendente',
       criado_por: userData?.user?.id || null

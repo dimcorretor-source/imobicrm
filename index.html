@@ -1213,12 +1213,15 @@ function renderLeads(){
   const body = document.getElementById('leadBody');
 
   if(leadView==='kanban'){
+    const scrollPrevio = body.querySelector('.kanban') ? body.querySelector('.kanban').scrollLeft : 0;
     body.innerHTML = `<div class="kanban">${LEAD_STATUSES.map(s=>`
       <div class="kcol" data-status="${s}"><h4>${s} (${pool.filter(l=>l.status===s).length})</h4>
         ${pool.filter(l=>l.status===s).map(l=>`
           <div class="kcard" draggable="true" data-id="${l.id}"><b>${l.nome}</b>${l.origem} · ${l.tipo}${l.orcamento?`<br>${fmtMoney(l.orcamento)}`:''}${isGestor()?`<br><span style="color:var(--ink-soft);">${corretorNome(l.corretorId)}</span>`:''}</div>
         `).join('')}
       </div>`).join('')}</div>`;
+    const novoKanban = body.querySelector('.kanban');
+    if(novoKanban) novoKanban.scrollLeft = scrollPrevio;
     bindKanbanEvents(body);
     return;
   }

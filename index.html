@@ -293,6 +293,48 @@ tr:hover td{background:var(--paper-2);}
   .modal-overlay{position:static !important; background:#fff !important; padding:0 !important; display:block !important;}
   .modal{box-shadow:none !important; border:none !important; max-width:100% !important; padding:0 !important;}
 }
+
+/* ---------- POWER BI (tela própria, tema escuro isolado — não mexe nas variáveis globais) ---------- */
+.pbi{
+  --pbi-bg:#10161d; --pbi-card:#1a232d; --pbi-card-2:#232f3b; --pbi-line:#2a3744;
+  --pbi-ink:#eef3f6; --pbi-ink-soft:#8fa0ac;
+  --pbi-teal:#22a897; --pbi-teal-soft:#163a34;
+  --pbi-blue:#6f8fd6; --pbi-blue-soft:#22273f;
+  --pbi-gold:#d99a3a; --pbi-gold-soft:#3a2c15;
+  --pbi-red:#e2645f;
+  background:var(--pbi-bg); color:var(--pbi-ink); border-radius:10px; padding:22px; margin:0 0 20px;
+  font-family:var(--body);
+}
+.pbi *{box-sizing:border-box;}
+.pbi table{color:var(--pbi-ink);}
+.pbi-toolbar{display:flex; flex-wrap:wrap; gap:10px 14px; margin-bottom:20px; align-items:flex-end;}
+.pbi-field{display:flex; flex-direction:column; gap:4px;}
+.pbi-field label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--pbi-ink-soft);}
+.pbi-field select{background:var(--pbi-card); border:1px solid var(--pbi-line); color:var(--pbi-ink); border-radius:6px; padding:7px 10px; font-size:12.5px; min-width:170px;}
+.pbi-kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+.pbi-kpi{background:var(--pbi-card); border:1px solid var(--pbi-line); border-radius:10px; padding:16px 18px;}
+.pbi-kpi-label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--pbi-ink-soft);}
+.pbi-kpi-value{font-size:25px; font-weight:700; margin-top:6px;}
+.pbi-kpi-sub{font-size:11px; color:var(--pbi-ink-soft); margin-top:3px;}
+.pbi-grid2{display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:18px;}
+.pbi-grid3{display:grid; grid-template-columns:1.1fr 1fr 1.2fr; gap:16px; margin-bottom:18px;}
+.pbi-card{background:var(--pbi-card); border:1px solid var(--pbi-line); border-radius:10px; padding:18px 20px;}
+.pbi-card-title{font-size:14.5px; font-weight:700; margin-bottom:4px;}
+.pbi-card-sub{font-size:11.5px; color:var(--pbi-ink-soft); margin-bottom:14px;}
+.pbi-bar-row{display:grid; grid-template-columns:min(40%,170px) 1fr 50px; align-items:center; gap:8px; margin-bottom:9px;}
+.pbi-bar-label{font-size:12px; color:var(--pbi-ink-soft); text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.pbi-bar-track{background:var(--pbi-card-2); border-radius:4px; height:16px;}
+.pbi-bar-fill{height:100%; border-radius:4px;}
+.pbi-bar-value{font-family:var(--mono); font-size:12px; color:var(--pbi-ink-soft);}
+.pbi-gauge-wrap{display:flex; align-items:center; justify-content:center; height:100%; min-height:170px;}
+.pbi-gauge{width:132px; height:132px; border-radius:50%; display:flex; align-items:center; justify-content:center;}
+.pbi-gauge-inner{width:96px; height:96px; border-radius:50%; background:var(--pbi-card); display:flex; flex-direction:column; align-items:center; justify-content:center;}
+.pbi-gauge-value{font-size:22px; font-weight:700;}
+.pbi-gauge-label{font-size:9px; color:var(--pbi-ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; text-align:center; padding:0 10px;}
+@media(max-width:900px){
+  .pbi-kpis{grid-template-columns:repeat(2,1fr);}
+  .pbi-grid2, .pbi-grid3{grid-template-columns:1fr;}
+}
 </style>
 </head>
 <body>
@@ -758,6 +800,7 @@ const ALL_VIEWS = [
   {id:'agenda', label:'Agenda', icon:'▤'},
   {id:'financeiro', label:'Financeiro', icon:'$'},
   {id:'relatorios', label:'Relatórios', icon:'≡'},
+  {id:'powerbi', label:'Power BI', icon:'▦'},
   {id:'equipe', label:'Equipe', icon:'☖', teamOnly:true},
   {id:'imobiliarias', label:'Imobiliárias', icon:'⌸', gestorOnly:true},
   {id:'roleta', label:'Roleta de leads', icon:'⟲', gestorOnly:true},
@@ -898,7 +941,7 @@ function renderAll(){
   const renderers = {
     dashboard: renderDashboard, pendencias: renderPendencias, produtos: renderProdutos, leads: renderLeads, clientes: renderClientes,
     imoveis: renderImoveis, agenda: renderAgenda, financeiro: renderFinanceiro,
-    relatorios: renderRelatorios, equipe: renderEquipe, imobiliarias: renderImobiliarias, roleta: renderRoleta, config: renderConfig
+    relatorios: renderRelatorios, powerbi: renderPowerBI, equipe: renderEquipe, imobiliarias: renderImobiliarias, roleta: renderRoleta, config: renderConfig
   };
   renderers[currentView]();
 }
@@ -2755,6 +2798,7 @@ function openReceitaDespesaForm(kind, existing){
 const CHART_RAMP_AZUL = ['#82abc4','#6396b6','#4d82a3','#406c87','#33566c','#264050'];
 const CHART_RAMP_DOURADO = ['#c4a164','#b58c45','#98753a','#7a5e2e','#594522'];
 const CHART_CINZA = '#a39d8a';
+const PBI_GOLD_RAMP = ['#74501b','#ae7829','#d49d49','#e2bc83','#efdbbd'];
 
 function encurtarLabelChart(s){ return String(s).replace(/\s*\(.*?\)\s*$/, ''); }
 
@@ -2830,15 +2874,8 @@ function renderRelatorios(){
   const negociando = leads.filter(l=>l.status==='Negociando');
   const projecaoNegociando = negociando.reduce((s,l)=>s + Number(l.orcamento||0)*0.03, 0);
 
-  // Funil: quantos leads estão hoje em cada etapa (não conta Remarketing/Perdido, que são desvios do funil principal)
-  const ETAPAS_FUNIL = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou'];
-  const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
-  const funilMax = Math.max(1, ...funilDados.map(f=>f.value));
-
-  const totalComOrigemInformada = leads.length;
-  const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
-  const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
-  const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
+  const origemCount = {};
+  leads.forEach(l=>{ origemCount[l.origem] = (origemCount[l.origem]||0)+1; });
 
   c.innerHTML = `
     <div class="section-block card">
@@ -2855,46 +2892,208 @@ function renderRelatorios(){
       <div class="card"><div class="kpi-label">Projeção pipeline</div><div class="kpi-value">${fmtMoney(projecaoNegociando)}</div><div class="kpi-sub">${negociando.length} lead(s) em negociação</div></div>
     </div>
 
-    <h3 style="font-family:var(--display); font-size:19px; margin:26px 0 4px;">📊 Painel de marketing</h3>
-    <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;">De onde vêm os leads, o que está convertendo e o perfil de quem fecha negócio — ${totalComOrigemInformada} lead(s) no total.</div>
-
-    ${chartCard('Funil de leads', 'Quantos leads estão hoje em cada etapa do funil (não inclui Remarketing/Perdido).',
-      barChartHtml(funilDados, {max:funilMax, color:(it,i)=>CHART_RAMP_AZUL[i]})
-    )}
-
-    <div class="grid grid-2 section-block">
-      ${chartCard('Leads por origem', 'De onde estão vindo seus leads.',
-        barChartHtml(porOrigem.map(o=>({label:o.label, value:o.count})), {color:'var(--azul)'})
-      )}
-      ${chartCard('Taxa de conversão por origem', '% dos leads de cada origem que já fecharam negócio.',
-        barChartHtml(porOrigem.map(o=>({label:o.label, value:o.pct})), {color:'var(--azul)', max:100, fmt:v=>v+'%'})
-      )}
+    <div class="section-block">
+      <div class="section-title">Leads por origem</div>
+      <table><thead><tr><th>Origem</th><th>Quantidade</th></tr></thead>
+      <tbody>${Object.keys(origemCount).length ? Object.entries(origemCount).sort((a,b)=>b[1]-a[1]).map(([o,n])=>`<tr><td>${o}</td><td class="mono">${n}</td></tr>`).join('') : '<tr><td colspan="2" style="color:var(--ink-soft);">Sem dados ainda.</td></tr>'}</tbody></table>
     </div>
 
-    <div class="grid grid-2 section-block">
-      ${chartCard('Leads por profissão', 'Perfil profissional de quem chega até você.',
-        barChartHtml(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.count})), {color:'var(--verde)'})
-      )}
-      ${chartCard('Taxa de conversão por profissão', '% de cada perfil profissional que já fechou negócio.',
-        barChartHtml(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.pct})), {color:'var(--verde)', max:100, fmt:v=>v+'%'})
-      )}
-    </div>
-
-    <div class="grid grid-2 section-block">
-      ${chartCard('Leads por faixa de renda', 'Poder de compra de quem está te procurando.',
-        barChartHtml(porFaixaRenda.map(o=>({label:o.label, value:o.count})), {color:(it,i)=>CHART_RAMP_DOURADO[i]||CHART_CINZA})
-      )}
-      ${chartCard('Taxa de conversão por faixa de renda', '% de cada faixa de renda que já fechou negócio.',
-        barChartHtml(porFaixaRenda.map(o=>({label:o.label, value:o.pct})), {color:(it,i)=>CHART_RAMP_DOURADO[i]||CHART_CINZA, max:100, fmt:v=>v+'%'})
-      )}
-    </div>
-
-    <div style="font-size:11px; color:var(--ink-soft); margin:-6px 0 20px;">💡 Profissão e faixa de renda são preenchidas no cadastro do lead (opcional). Quanto mais leads tiverem esses dados, mais preciso fica o painel.</div>
+    <div class="section-block" style="font-size:12.5px; color:var(--ink-soft);">📊 Quer ver de onde vêm seus leads, taxa de conversão por origem/perfil e mais gráficos? Acesse a aba <b>Power BI</b> no menu.</div>
 
     <div class="section-block no-print">
       <button class="btn btn-outline" onclick="window.print()">🖨 Imprimir relatório</button>
     </div>
   `;
+}
+
+/* ============================================================
+   POWER BI (painel de marketing/BI dedicado, tema escuro)
+============================================================ */
+let pbiProdutoFilter = 'Todos';
+let pbiCorretorFilter = 'Todos';
+let pbiPeriodoFilter = 'Todos'; // 'Todos' | '30d' | '90d' | 'ano'
+
+function pbiBarRows(items, opts){
+  opts = opts || {};
+  if(!items.length) return `<div style="font-size:12px; color:var(--pbi-ink-soft);">Sem dados ainda.</div>`;
+  const max = opts.max || Math.max(1, ...items.map(i=>i.value));
+  const fmt = opts.fmt || (v=>String(v));
+  return items.map((it,i)=>{
+    const color = typeof opts.color === 'function' ? opts.color(it,i) : (Array.isArray(opts.color) ? (opts.color[i]||opts.color[opts.color.length-1]) : (opts.color || 'var(--pbi-teal)'));
+    const pct = max ? Math.max(it.value>0?2:0, Math.round(100*it.value/max)) : 0;
+    return `
+      <div class="pbi-bar-row">
+        <div class="pbi-bar-label" title="${it.label}">${it.label}</div>
+        <div class="pbi-bar-track"><div class="pbi-bar-fill" style="background:${color}; width:${pct}%;"></div></div>
+        <div class="pbi-bar-value">${fmt(it.value)}</div>
+      </div>`;
+  }).join('');
+}
+
+function pbiCard(title, subtitle, bodyHtml){
+  return `<div class="pbi-card">
+    <div class="pbi-card-title">${title}</div>
+    ${subtitle?`<div class="pbi-card-sub">${subtitle}</div>`:''}
+    ${bodyHtml}
+  </div>`;
+}
+
+function pbiGauge(pct, label, color){
+  color = color || 'var(--pbi-teal)';
+  const deg = Math.max(0,Math.min(100,pct))*3.6;
+  return `<div class="pbi-gauge-wrap">
+    <div class="pbi-gauge" style="background:conic-gradient(${color} ${deg}deg, var(--pbi-card-2) ${deg}deg);">
+      <div class="pbi-gauge-inner">
+        <div class="pbi-gauge-value">${pct}%</div>
+        <div class="pbi-gauge-label">${label}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Gráfico de área acumulada (SVG simples): leads captados x fechamentos, acumulado mês a mês
+function pbiAreaAcumulada(meses, serieA, serieB){
+  const w = 560, h = 170, padL = 22, padR = 22, padT = 10, padB = 22;
+  const n = meses.length;
+  const maxVal = Math.max(1, ...serieA, ...serieB);
+  const x = i => padL + (n>1 ? i*(w-padL-padR)/(n-1) : 0);
+  const y = v => padT + (h-padT-padB) * (1 - v/maxVal);
+  const pathFor = (serie) => serie.map((v,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ' ' + y(v).toFixed(1)).join(' ');
+  const areaFor = (serie) => `M${x(0).toFixed(1)} ${y(0).toFixed(1)} ` + serie.map((v,i)=>`L${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ') + ` L${x(n-1).toFixed(1)} ${(h-padB).toFixed(1)} L${x(0).toFixed(1)} ${(h-padB).toFixed(1)} Z`;
+  const labelsHtml = meses.map((m,i)=>`<text x="${x(i).toFixed(1)}" y="${h-6}" font-size="9" fill="#8fa0ac" text-anchor="middle">${m}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%; height:auto; display:block;">
+    <path d="${areaFor(serieA)}" fill="#22a897" opacity="0.16"></path>
+    <path d="${pathFor(serieA)}" fill="none" stroke="#22a897" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+    <path d="${areaFor(serieB)}" fill="#d99a3a" opacity="0.16"></path>
+    <path d="${pathFor(serieB)}" fill="none" stroke="#d99a3a" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+    ${labelsHtml}
+  </svg>
+  <div style="display:flex; gap:16px; margin-top:8px; font-size:11px; color:var(--pbi-ink-soft);">
+    <span><span style="display:inline-block; width:9px; height:9px; border-radius:2px; background:var(--pbi-teal); margin-right:5px;"></span>Leads captados (acum.)</span>
+    <span><span style="display:inline-block; width:9px; height:9px; border-radius:2px; background:var(--pbi-gold); margin-right:5px;"></span>Fechamentos (acum.)</span>
+  </div>`;
+}
+
+function renderPowerBI(){
+  const c = document.getElementById('content');
+  let leads = scoped(state.leads);
+
+  if(pbiProdutoFilter !== 'Todos'){
+    const prod = state.produtos.find(p=>p.nome===pbiProdutoFilter);
+    leads = leads.filter(l=>prod && l.produtoId===prod.id);
+  }
+  if(canManageTeam() && pbiCorretorFilter !== 'Todos'){
+    const u = state.usuarios.find(x=>x.nome===pbiCorretorFilter);
+    leads = leads.filter(l=>u && l.corretorId===u.id);
+  }
+  if(pbiPeriodoFilter !== 'Todos'){
+    const hoje0 = new Date();
+    const dias = pbiPeriodoFilter==='30d' ? 30 : pbiPeriodoFilter==='90d' ? 90 : 365;
+    const limite = new Date(hoje0.getTime() - dias*86400000).toISOString().slice(0,10);
+    leads = leads.filter(l=>l.dataCriacao && l.dataCriacao >= limite);
+  }
+
+  const total = leads.length;
+  const fechados = leads.filter(l=>l.status==='Fechou').length;
+  const ativos = leads.filter(l=>!['Fechou','Perdido','Remarketing'].includes(l.status)).length;
+  const taxaConv = total ? Math.round(100*fechados/total) : 0;
+  const valorPotencial = leads.filter(l=>!['Fechou','Perdido'].includes(l.status)).reduce((s,l)=>s+Number(l.orcamento||0),0);
+
+  const ETAPAS_FUNIL = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou'];
+  const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
+
+  const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
+  const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
+  const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
+
+  const hoje = new Date();
+  const mesesArr = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(hoje.getFullYear(), hoje.getMonth()-i, 1);
+    mesesArr.push(d.toISOString().slice(0,7));
+  }
+  const NOMES_MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  const labelsMes = mesesArr.map(m=>{
+    const [ano,mes] = m.split('-');
+    return NOMES_MES[Number(mes)-1] + '/' + ano.slice(2);
+  });
+  let acumCaptados = 0, acumFechados = 0;
+  const serieCaptados = [], serieFechados = [];
+  mesesArr.forEach(m=>{
+    acumCaptados += leads.filter(l=>l.dataCriacao && l.dataCriacao.slice(0,7)===m).length;
+    acumFechados += leads.filter(l=>l.status==='Fechou' && l.dataCriacao && l.dataCriacao.slice(0,7)===m).length;
+    serieCaptados.push(acumCaptados);
+    serieFechados.push(acumFechados);
+  });
+
+  const nomesCorretor = isGestor() ? state.usuarios.map(u=>u.nome) : state.usuarios.filter(u=>teamMemberIds().includes(u.id)).map(u=>u.nome);
+
+  c.innerHTML = `
+  <div class="pbi">
+    <div class="pbi-toolbar">
+      <div class="pbi-field">
+        <label>Produto / Empreendimento</label>
+        <select id="pbiFiltroProduto">
+          ${['Todos', ...state.produtos.map(p=>p.nome)].map(n=>`<option value="${n}" ${pbiProdutoFilter===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      ${canManageTeam() ? `<div class="pbi-field">
+        <label>Corretor</label>
+        <select id="pbiFiltroCorretor">
+          ${['Todos', ...nomesCorretor].map(n=>`<option value="${n}" ${pbiCorretorFilter===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>` : ''}
+      <div class="pbi-field">
+        <label>Período</label>
+        <select id="pbiFiltroPeriodo">
+          <option value="Todos" ${pbiPeriodoFilter==='Todos'?'selected':''}>Desde o início</option>
+          <option value="30d" ${pbiPeriodoFilter==='30d'?'selected':''}>Últimos 30 dias</option>
+          <option value="90d" ${pbiPeriodoFilter==='90d'?'selected':''}>Últimos 90 dias</option>
+          <option value="ano" ${pbiPeriodoFilter==='ano'?'selected':''}>Últimos 12 meses</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="pbi-kpis">
+      <div class="pbi-kpi"><div class="pbi-kpi-label">Total de leads</div><div class="pbi-kpi-value">${total}</div><div class="pbi-kpi-sub">${ativos} ativo(s) agora</div></div>
+      <div class="pbi-kpi"><div class="pbi-kpi-label">Negócios fechados</div><div class="pbi-kpi-value">${fechados}</div><div class="pbi-kpi-sub">no recorte selecionado</div></div>
+      <div class="pbi-kpi"><div class="pbi-kpi-label">Valor em potencial</div><div class="pbi-kpi-value">${fmtMoney(valorPotencial)}</div><div class="pbi-kpi-sub">orçamento dos leads em aberto</div></div>
+      <div class="pbi-kpi" style="display:flex; align-items:center; justify-content:center; padding:6px;">${pbiGauge(taxaConv, 'Taxa de conversão')}</div>
+    </div>
+
+    ${pbiCard('Funil de leads', 'Quantos leads estão hoje em cada etapa do funil (não inclui Remarketing/Perdido).',
+      pbiBarRows(funilDados, {color:'var(--pbi-teal)'})
+    )}
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por origem', 'De onde estão vindo os leads.', pbiBarRows(porOrigem.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-teal)'}))}
+      ${pbiCard('Conversão por origem', '% dos leads de cada origem que já fecharam.', pbiBarRows(porOrigem.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%'}))}
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por profissão', 'Perfil profissional de quem chega até você.', pbiBarRows(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.count})), {color:'var(--pbi-blue)'}))}
+      ${pbiCard('Conversão por profissão', '% de cada perfil profissional que já fechou.', pbiBarRows(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.pct})), {color:'var(--pbi-blue)', max:100, fmt:v=>v+'%'}))}
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por faixa de renda', 'Poder de compra de quem está te procurando.', pbiBarRows(porFaixaRenda.map(o=>({label:o.label, value:o.count})), {color:(it,i)=>PBI_GOLD_RAMP[i]||'var(--pbi-gold)'}))}
+      ${pbiCard('Conversão por faixa de renda', '% de cada faixa de renda que já fechou.', pbiBarRows(porFaixaRenda.map(o=>({label:o.label, value:o.pct})), {color:(it,i)=>PBI_GOLD_RAMP[i]||'var(--pbi-gold)', max:100, fmt:v=>v+'%'}))}
+    </div>
+
+    ${pbiCard('Leads captados x fechamentos (acumulado)', 'Últimos 6 meses, por data de criação do lead.',
+      pbiAreaAcumulada(labelsMes, serieCaptados, serieFechados)
+    )}
+
+    <div style="font-size:11px; color:var(--pbi-ink-soft); margin-top:-4px;">💡 Profissão e faixa de renda são preenchidas (opcional) no cadastro do lead — quanto mais leads tiverem esse dado, mais preciso fica o painel.</div>
+  </div>
+  `;
+
+  const selProd = document.getElementById('pbiFiltroProduto');
+  if(selProd) selProd.addEventListener('change', ()=>{ pbiProdutoFilter = selProd.value; renderPowerBI(); });
+  const selCorr = document.getElementById('pbiFiltroCorretor');
+  if(selCorr) selCorr.addEventListener('change', ()=>{ pbiCorretorFilter = selCorr.value; renderPowerBI(); });
+  const selPer = document.getElementById('pbiFiltroPeriodo');
+  if(selPer) selPer.addEventListener('change', ()=>{ pbiPeriodoFilter = selPer.value; renderPowerBI(); });
 }
 
 /* ============================================================

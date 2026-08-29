@@ -1155,6 +1155,13 @@ let leadSelected = new Set();
 
 function renderLeads(){
   const c = document.getElementById('content');
+  const base = scoped(state.leads);
+  let pool = base;
+  if(canManageTeam() && leadCorretorFilter!=='Todos'){
+    const u = state.usuarios.find(x=>x.nome===leadCorretorFilter);
+    pool = pool.filter(l=>u && l.corretorId===u.id);
+  }
+  const filtered = leadFilter==='Todos' ? pool : pool.filter(l=>l.status===leadFilter);
   c.innerHTML = `
     <div class="section-title">
       <span>Leads</span>
@@ -1162,6 +1169,7 @@ function renderLeads(){
         ${canManageTeam() && leadSelectMode && leadSelected.size ? `<button class="btn btn-sm" id="btnTransferirLeads">↪ Transferir para... (${leadSelected.size})</button>` : ''}
         ${canManageTeam() && leadSelectMode && leadSelected.size && leadFilter==='Remarketing' ? `<button class="btn btn-sm" id="btnEnviarRemarketing">📨 Enviar mensagem (${leadSelected.size})</button>` : ''}
         ${canManageTeam() ? `<button class="btn btn-outline btn-sm" id="btnSelecionarLeads">${leadSelectMode ? 'Cancelar seleção' : '☑ Selecionar'}</button>` : ''}
+        ${canManageTeam() && leadSelectMode && leadView==='lista' && filtered.length ? `<button class="btn btn-outline btn-sm" id="btnSelecionarTodos">☑ Selecionar todos (${filtered.length})</button>` : ''}
         ${canManageTeam() ? `<button class="btn btn-outline btn-sm" id="btnIrRemarketing">📨 Remarketing</button>` : ''}
         <button class="btn btn-outline btn-sm" id="toggleKanban">${leadView==='lista'?'⊞ Ver kanban':'≡ Ver lista'}</button>
         <button class="btn btn-outline btn-sm" id="btnImportarExcel">⇧ Importar Excel</button>
@@ -1173,7 +1181,6 @@ function renderLeads(){
     ${canManageTeam()?'<div class="pillbar" id="leadCorretorPills"></div>':''}
     <div id="leadBody"></div>
   `;
-  const base = scoped(state.leads);
   const pills = document.getElementById('leadPills');
   const counts = {Todos: base.length};
   LEAD_STATUSES.forEach(s=> counts[s] = base.filter(l=>l.status===s).length);
@@ -1212,13 +1219,12 @@ function renderLeads(){
     leadSelected.clear();
     renderLeads();
   });
+  const btnTodos = document.getElementById('btnSelecionarTodos');
+  if(btnTodos) btnTodos.addEventListener('click', ()=>{
+    filtered.forEach(l=>leadSelected.add(l.id));
+    renderLeads();
+  });
 
-  let pool = base;
-  if(canManageTeam() && leadCorretorFilter!=='Todos'){
-    const u = state.usuarios.find(x=>x.nome===leadCorretorFilter);
-    pool = pool.filter(l=>u && l.corretorId===u.id);
-  }
-  const filtered = leadFilter==='Todos' ? pool : pool.filter(l=>l.status===leadFilter);
   const body = document.getElementById('leadBody');
 
   if(leadView==='kanban'){
@@ -1303,8 +1309,11 @@ function openEnviarRemarketingForm(){
     extraHtml: `
       <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Vai para: ${nomesSelecionados}</p>
       <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-4px;">
-        Dica: escreva <b>{nome}</b> em qualquer parte da mensagem que cada pessoa recebe com o próprio nome dela no lugar — não precisa escrever nome por nome.
+        <button type="button" class="btn-sm btn-outline" id="remktSugerirIA">✨ Sugerir mensagem com IA</button>
         <button type="button" class="btn-sm btn-outline" id="remktInserirNome" style="margin-left:6px;">+ inserir {nome}</button>
+      </p>
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-4px;">
+        Dica: escreva <b>{nome}</b> em qualquer parte da mensagem que cada pessoa recebe com o próprio nome dela no lugar — não precisa escrever nome por nome.
       </p>
       <div class="field">
         <label>Foto (opcional, vai anexada à mensagem)</label>
@@ -1321,6 +1330,8 @@ function openEnviarRemarketingForm(){
       await sendRemarketingWhatsapp(ids, r.mensagem.trim(), fotoAtual);
     }
   });
+  const btnSugerirIA = document.getElementById('remktSugerirIA');
+  if(btnSugerirIA) btnSugerirIA.addEventListener('click', ()=>sugerirMensagemComIA(ids, btnSugerirIA));
   const fotoInput = document.getElementById('remktFotoFile');
   if(fotoInput) fotoInput.addEventListener('change', (e)=>{
     const file = e.target.files[0];
@@ -1347,6 +1358,54 @@ function openEnviarRemarketingForm(){
 function personalizarMensagem(mensagem, lead){
   const primeiroNome = (lead.nome||'').trim().split(' ')[0] || 'cliente';
   return mensagem.replace(/\{nome\}/gi, primeiroNome);
+}
+
+// Pede pro bot (que já tem a IA configurada) sugerir um texto de remarketing, e espera o resultado aparecer no banco.
+async function sugerirMensagemComIA(ids, botao){
+  if(!sb){ alert('Sem conexão com o servidor agora.'); return; }
+  const leadsAlvo = state.leads.filter(l=>ids.includes(l.id));
+  const produtos = [...new Set(leadsAlvo.map(l=>{
+    const p = state.produtos.find(pp=>pp.id===l.produtoId);
+    return p ? p.nome : null;
+  }).filter(Boolean))];
+
+  const textoOriginal = botao.textContent;
+  botao.textContent = 'Gerando...';
+  botao.disabled = true;
+  try{
+    const { data: userData } = await sb.auth.getUser();
+    const { data: inserido, error } = await sb.from('ia_geracao_fila').insert([{
+      tipo: 'mensagem_remarketing',
+      entrada: { produtos },
+      status: 'pendente',
+      criado_por: userData?.user?.id || null
+    }]).select('id').single();
+    if(error || !inserido){ alert('Erro ao pedir sugestão: ' + (error?.message||'tente novamente.')); return; }
+
+    const id = inserido.id;
+    const tentativas = 15; // ~1.5s * 15 = ~22s de espera máxima
+    for(let i=0; i<tentativas; i++){
+      await new Promise(res=>setTimeout(res, 1500));
+      const { data: item } = await sb.from('ia_geracao_fila').select('status, resultado, erro_msg').eq('id', id).single();
+      if(!item) continue;
+      if(item.status==='pronto'){
+        const ta = document.getElementById('ff_mensagem');
+        if(ta) ta.value = item.resultado || '';
+        return;
+      }
+      if(item.status==='erro'){
+        alert('A IA não conseguiu gerar a mensagem: ' + (item.erro_msg||'erro desconhecido') + '. Tente escrever manualmente.');
+        return;
+      }
+    }
+    alert('A geração demorou demais e foi cancelada. Tente de novo ou escreva a mensagem manualmente.');
+  }catch(err){
+    console.error(err);
+    alert('Erro ao pedir sugestão da IA.');
+  }finally{
+    botao.textContent = textoOriginal;
+    botao.disabled = false;
+  }
 }
 
 async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){

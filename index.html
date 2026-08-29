@@ -184,7 +184,7 @@ tr:hover td{background:var(--paper-2);}
 .pill.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
 .pillbar select{font-size:11.5px; padding:6px 10px; border-radius:20px; border:1px solid var(--line); background:var(--paper-3); color:var(--ink-soft);}
 
-.kanban{display:grid; grid-template-columns:repeat(7,1fr); gap:10px; overflow-x:auto;}
+.kanban{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(150px,1fr); gap:10px; overflow-x:auto;}
 .kcol{background:var(--paper-2); border-radius:var(--radius); padding:10px; min-width:150px; min-height:80px; transition:background 0.15s;}
 .kcol.dragover{background:var(--azul-soft); outline:2px dashed var(--azul);}
 .kcol h4{font-size:11px; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 8px 2px; color:var(--ink-soft);}
@@ -272,7 +272,7 @@ tr:hover td{background:var(--paper-2);}
   .imoveis-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));}
   .modal{padding:20px 16px; max-width:100%;}
   .field-row{grid-template-columns:1fr;}
-  .kanban{grid-template-columns:repeat(7,220px);}
+  .kanban{grid-auto-columns:220px;}
   table{font-size:12px;}
   th, td{padding:8px 6px;}
   .field input, .field select, .field textarea{font-size:16px; padding:10px 11px;}

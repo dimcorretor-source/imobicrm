@@ -184,11 +184,11 @@ tr:hover td{background:var(--paper-2);}
 .pill.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
 .pillbar select{font-size:11.5px; padding:6px 10px; border-radius:20px; border:1px solid var(--line); background:var(--paper-3); color:var(--ink-soft);}
 
-.kanban{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(150px,1fr); gap:10px; overflow-x:auto;}
-.kcol{background:var(--paper-2); border-radius:var(--radius); padding:10px; min-width:150px; min-height:80px; transition:background 0.15s;}
+.kanban{display:grid; grid-auto-flow:column; grid-auto-columns:minmax(108px,1fr); gap:6px; overflow-x:auto;}
+.kcol{background:var(--paper-2); border-radius:var(--radius); padding:7px; min-width:108px; min-height:80px; transition:background 0.15s;}
 .kcol.dragover{background:var(--azul-soft); outline:2px dashed var(--azul);}
 .kcol h4{font-size:11px; text-transform:uppercase; letter-spacing:0.05em; margin:0 0 8px 2px; color:var(--ink-soft);}
-.kcard{background:var(--paper-3); border:1px solid var(--line); border-radius:var(--radius); padding:8px 9px; margin-bottom:7px; font-size:12px; cursor:grab;}
+.kcard{background:var(--paper-3); border:1px solid var(--line); border-radius:var(--radius); padding:6px 7px; margin-bottom:6px; font-size:11.5px; cursor:grab; overflow-wrap:break-word;}
 .kcard:hover{border-color:var(--ink);}
 .kcard.dragging{opacity:0.4;}
 .kcard b{display:block; font-size:12.5px; margin-bottom:2px;}
@@ -1162,6 +1162,7 @@ function renderLeads(){
         ${canManageTeam() && leadSelectMode && leadSelected.size ? `<button class="btn btn-sm" id="btnTransferirLeads">↪ Transferir para... (${leadSelected.size})</button>` : ''}
         ${canManageTeam() && leadSelectMode && leadSelected.size && leadFilter==='Remarketing' ? `<button class="btn btn-sm" id="btnEnviarRemarketing">📨 Enviar mensagem (${leadSelected.size})</button>` : ''}
         ${canManageTeam() ? `<button class="btn btn-outline btn-sm" id="btnSelecionarLeads">${leadSelectMode ? 'Cancelar seleção' : '☑ Selecionar'}</button>` : ''}
+        ${canManageTeam() ? `<button class="btn btn-outline btn-sm" id="btnIrRemarketing">📨 Remarketing</button>` : ''}
         <button class="btn btn-outline btn-sm" id="toggleKanban">${leadView==='lista'?'⊞ Ver kanban':'≡ Ver lista'}</button>
         <button class="btn btn-outline btn-sm" id="btnImportarExcel">⇧ Importar Excel</button>
         <input type="file" id="excelImportInput" accept=".xlsx,.xls,.csv" style="display:none">
@@ -1203,6 +1204,14 @@ function renderLeads(){
   if(btnTransf) btnTransf.addEventListener('click', ()=>openTransferirLeadsForm());
   const btnRemkt = document.getElementById('btnEnviarRemarketing');
   if(btnRemkt) btnRemkt.addEventListener('click', ()=>openEnviarRemarketingForm());
+  const btnIrRemkt = document.getElementById('btnIrRemarketing');
+  if(btnIrRemkt) btnIrRemkt.addEventListener('click', ()=>{
+    leadView = 'lista';
+    leadFilter = 'Remarketing';
+    leadSelectMode = true;
+    leadSelected.clear();
+    renderLeads();
+  });
 
   let pool = base;
   if(canManageTeam() && leadCorretorFilter!=='Todos'){

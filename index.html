@@ -370,8 +370,8 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, tipo:r.tipo, orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, tipo:l.tipo, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, tipo:r.tipo, profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, tipo:l.tipo, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
 
 function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null }; }
 function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null }; }
@@ -1125,6 +1125,8 @@ function roletaBadgeHtml(lead){
 const LEAD_STATUSES = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou','Remarketing','Perdido'];
 const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','OLX','ZAP','Viva Real','Portaria','Outros'];
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
+const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
+const LEAD_FAIXAS_RENDA = ['Até R$ 3.000','R$ 3.001 – R$ 6.000','R$ 6.001 – R$ 10.000','R$ 10.001 – R$ 20.000','Acima de R$ 20.000'];
 
 function leadSchema(){
   const base = [
@@ -1133,6 +1135,8 @@ function leadSchema(){
     {key:'email', label:'E-mail'},
     {key:'origem', label:'Origem', type:'select', options:LEAD_ORIGENS},
     {key:'tipo', label:'Tipo', type:'select', options:LEAD_TIPOS},
+    {key:'profissao', label:'Profissão (opcional)', type:'select', options:['(não informado)', ...LEAD_PROFISSOES]},
+    {key:'faixaRenda', label:'Faixa de renda (opcional)', type:'select', options:['(não informado)', ...LEAD_FAIXAS_RENDA]},
     {key:'produtoNome', label:'Produto/empreendimento', type:'select', options:['(nenhum)', ...state.produtos.map(p=>p.nome)]},
     {key:'orcamento', label:'Orçamento (R$)', type:'number'},
     {key:'bairrosInteresse', label:'Bairros de interesse'},
@@ -1485,7 +1489,7 @@ function openLeadForm(existing){
   const schema = leadSchema();
   const imAtual = existing && state.imoveis.find(i=>i.id===existing.imovelInteresseId);
   const prodAtual = existing && state.produtos.find(p=>p.id===existing.produtoId);
-  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)'};
+  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)', profissao: existing.profissao||'(não informado)', faixaRenda: existing.faixaRenda||'(não informado)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)', profissao:'(não informado)', faixaRenda:'(não informado)'};
   openModal({
     title: existing ? 'Editar lead' : 'Novo lead',
     schema, data,
@@ -1499,6 +1503,8 @@ function openLeadForm(existing){
       const imovelInteresseId = imSel ? imSel.id : null;
       const prodSel = state.produtos.find(p=>p.nome===result.produtoNome);
       const produtoId = prodSel ? prodSel.id : null;
+      if(result.profissao==='(não informado)') result.profissao = '';
+      if(result.faixaRenda==='(não informado)') result.faixaRenda = '';
       delete result.corretorNome; delete result.imovelCodigo; delete result.produtoNome;
       if(existing){
         Object.assign(existing, result, {corretorId, imovelInteresseId, produtoId});
@@ -1530,6 +1536,8 @@ function openLeadDetail(id){
           <div><b>E-mail:</b> ${lead.email||'—'}</div>
           <div><b>Origem:</b> ${lead.origem}</div>
           <div><b>Tipo:</b> ${lead.tipo}</div>
+          <div><b>Profissão:</b> ${lead.profissao||'—'}</div>
+          <div><b>Faixa de renda:</b> ${lead.faixaRenda||'—'}</div>
           <div><b>Orçamento:</b> ${lead.orcamento?fmtMoney(lead.orcamento):'—'}</div>
           <div><b>Bairros:</b> ${lead.bairrosInteresse||'—'}</div>
         </div>
@@ -1631,7 +1639,7 @@ function openFecharLeadFlow(lead, after){
       {key:'imovelCodigo', label:'Lote fechado', type:'select', options:['(nenhum)', ...state.imoveis.map(i=>i.codigo)]},
       {key:'novoStatusImovel', label:'Marcar lote como', type:'select', options:['Não alterar','Vendido','Reservado']}
     ],
-    data:{imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', novoStatusImovel:'Não alterar'},
+    data:{imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', novoStatusImovel:'Não alterar', profissao: lead.profissao||''},
     onSave:(result)=>{
       lead.status = 'Fechou';
       const imSel = state.imoveis.find(i=>i.codigo===result.imovelCodigo);
@@ -2742,6 +2750,68 @@ function openReceitaDespesaForm(kind, existing){
 }
 
 /* ============================================================
+   GRÁFICOS (barras horizontais simples, sem biblioteca externa)
+============================================================ */
+const CHART_RAMP_AZUL = ['#82abc4','#6396b6','#4d82a3','#406c87','#33566c','#264050'];
+const CHART_RAMP_DOURADO = ['#c4a164','#b58c45','#98753a','#7a5e2e','#594522'];
+const CHART_CINZA = '#a39d8a';
+
+function encurtarLabelChart(s){ return String(s).replace(/\s*\(.*?\)\s*$/, ''); }
+
+function chartCard(title, subtitle, bodyHtml){
+  return `<div class="card section-block">
+    <div class="section-title">${title}</div>
+    ${subtitle?`<div style="font-size:11.5px; color:var(--ink-soft); margin-bottom:12px;">${subtitle}</div>`:''}
+    ${bodyHtml}
+  </div>`;
+}
+
+// items: [{label, value}]; opts.color: string | array | fn(item,i); opts.fmt: fn(value)
+function barChartHtml(items, opts){
+  opts = opts || {};
+  if(!items.length) return `<div style="font-size:12.5px; color:var(--ink-soft);">Sem dados ainda.</div>`;
+  const max = opts.max || Math.max(1, ...items.map(i=>i.value));
+  const fmt = opts.fmt || (v=>String(v));
+  return items.map((it,i)=>{
+    const color = typeof opts.color === 'function' ? opts.color(it,i) : (Array.isArray(opts.color) ? (opts.color[i]||opts.color[opts.color.length-1]) : (opts.color || 'var(--azul)'));
+    const pct = max ? Math.max(it.value>0?2:0, Math.round(100*it.value/max)) : 0;
+    return `
+      <div style="display:grid; grid-template-columns:min(38%,180px) 1fr 54px; align-items:center; gap:8px; margin-bottom:9px;">
+        <div style="font-size:12px; color:var(--ink-soft); text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${it.label}">${it.label}</div>
+        <div style="background:var(--paper-2); border-radius:4px; height:16px;">
+          <div style="background:${color}; width:${pct}%; height:100%; border-radius:4px;"></div>
+        </div>
+        <div class="mono" style="font-size:12px; color:var(--ink-soft);">${fmt(it.value)}</div>
+      </div>`;
+  }).join('');
+}
+
+// Agrupa leads por uma dimensão (origem, profissão, faixa de renda) contando volume e conversão (% fechou) juntos.
+// opts.ordem: lista fixa (dimensão ordinal, ex. faixas de renda) — mantém a ordem em vez de ranquear por volume.
+// opts.limite: corta o rank em N grupos e soma o resto em "Outros" (dimensão nominal).
+function agruparComConversao(leads, keyFn, opts){
+  opts = opts || {};
+  const cont = {};
+  leads.forEach(l=>{
+    const k = keyFn(l) || 'Não informado';
+    if(!cont[k]) cont[k] = {total:0, fechou:0};
+    cont[k].total++;
+    if(l.status==='Fechou') cont[k].fechou++;
+  });
+  let arr = Object.entries(cont).map(([label,v])=>({label, total:v.total, fechou:v.fechou})).sort((a,b)=>b.total-a.total);
+  if(opts.ordem){
+    const porLabel = {}; arr.forEach(a=>{ porLabel[a.label]=a; });
+    arr = opts.ordem.map(cat=>porLabel[cat] || {label:cat, total:0, fechou:0});
+    if(porLabel['Não informado']) arr.push(porLabel['Não informado']);
+  }else if(opts.limite && arr.length > opts.limite){
+    const topo = arr.slice(0, opts.limite-1);
+    const resto = arr.slice(opts.limite-1);
+    arr = [...topo, {label:'Outros', total: resto.reduce((s,i)=>s+i.total,0), fechou: resto.reduce((s,i)=>s+i.fechou,0)}];
+  }
+  return arr.map(a=>({label:a.label, count:a.total, pct: a.total ? Math.round(100*a.fechou/a.total) : 0}));
+}
+
+/* ============================================================
    RELATÓRIOS
 ============================================================ */
 function renderRelatorios(){
@@ -2760,8 +2830,15 @@ function renderRelatorios(){
   const negociando = leads.filter(l=>l.status==='Negociando');
   const projecaoNegociando = negociando.reduce((s,l)=>s + Number(l.orcamento||0)*0.03, 0);
 
-  const origemCount = {};
-  leads.forEach(l=>{ origemCount[l.origem] = (origemCount[l.origem]||0)+1; });
+  // Funil: quantos leads estão hoje em cada etapa (não conta Remarketing/Perdido, que são desvios do funil principal)
+  const ETAPAS_FUNIL = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou'];
+  const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
+  const funilMax = Math.max(1, ...funilDados.map(f=>f.value));
+
+  const totalComOrigemInformada = leads.length;
+  const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
+  const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
+  const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
 
   c.innerHTML = `
     <div class="section-block card">
@@ -2778,11 +2855,41 @@ function renderRelatorios(){
       <div class="card"><div class="kpi-label">Projeção pipeline</div><div class="kpi-value">${fmtMoney(projecaoNegociando)}</div><div class="kpi-sub">${negociando.length} lead(s) em negociação</div></div>
     </div>
 
-    <div class="section-block">
-      <div class="section-title">Leads por origem</div>
-      <table><thead><tr><th>Origem</th><th>Quantidade</th></tr></thead>
-      <tbody>${Object.keys(origemCount).length ? Object.entries(origemCount).sort((a,b)=>b[1]-a[1]).map(([o,n])=>`<tr><td>${o}</td><td class="mono">${n}</td></tr>`).join('') : '<tr><td colspan="2" style="color:var(--ink-soft);">Sem dados ainda.</td></tr>'}</tbody></table>
+    <h3 style="font-family:var(--display); font-size:19px; margin:26px 0 4px;">📊 Painel de marketing</h3>
+    <div style="font-size:12.5px; color:var(--ink-soft); margin-bottom:4px;">De onde vêm os leads, o que está convertendo e o perfil de quem fecha negócio — ${totalComOrigemInformada} lead(s) no total.</div>
+
+    ${chartCard('Funil de leads', 'Quantos leads estão hoje em cada etapa do funil (não inclui Remarketing/Perdido).',
+      barChartHtml(funilDados, {max:funilMax, color:(it,i)=>CHART_RAMP_AZUL[i]})
+    )}
+
+    <div class="grid grid-2 section-block">
+      ${chartCard('Leads por origem', 'De onde estão vindo seus leads.',
+        barChartHtml(porOrigem.map(o=>({label:o.label, value:o.count})), {color:'var(--azul)'})
+      )}
+      ${chartCard('Taxa de conversão por origem', '% dos leads de cada origem que já fecharam negócio.',
+        barChartHtml(porOrigem.map(o=>({label:o.label, value:o.pct})), {color:'var(--azul)', max:100, fmt:v=>v+'%'})
+      )}
     </div>
+
+    <div class="grid grid-2 section-block">
+      ${chartCard('Leads por profissão', 'Perfil profissional de quem chega até você.',
+        barChartHtml(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.count})), {color:'var(--verde)'})
+      )}
+      ${chartCard('Taxa de conversão por profissão', '% de cada perfil profissional que já fechou negócio.',
+        barChartHtml(porProfissao.map(o=>({label:encurtarLabelChart(o.label), value:o.pct})), {color:'var(--verde)', max:100, fmt:v=>v+'%'})
+      )}
+    </div>
+
+    <div class="grid grid-2 section-block">
+      ${chartCard('Leads por faixa de renda', 'Poder de compra de quem está te procurando.',
+        barChartHtml(porFaixaRenda.map(o=>({label:o.label, value:o.count})), {color:(it,i)=>CHART_RAMP_DOURADO[i]||CHART_CINZA})
+      )}
+      ${chartCard('Taxa de conversão por faixa de renda', '% de cada faixa de renda que já fechou negócio.',
+        barChartHtml(porFaixaRenda.map(o=>({label:o.label, value:o.pct})), {color:(it,i)=>CHART_RAMP_DOURADO[i]||CHART_CINZA, max:100, fmt:v=>v+'%'})
+      )}
+    </div>
+
+    <div style="font-size:11px; color:var(--ink-soft); margin:-6px 0 20px;">💡 Profissão e faixa de renda são preenchidas no cadastro do lead (opcional). Quanto mais leads tiverem esses dados, mais preciso fica o painel.</div>
 
     <div class="section-block no-print">
       <button class="btn btn-outline" onclick="window.print()">🖨 Imprimir relatório</button>

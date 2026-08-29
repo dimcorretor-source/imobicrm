@@ -1338,32 +1338,32 @@ async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
   }
   const alvos = leadsAlvo.filter(l=>l.telefone);
   if(!alvos.length){ alert('Nenhum cliente selecionado tem telefone cadastrado.'); return; }
+  if(!sb){ alert('Sem conexão com o servidor agora. Tente novamente em instantes.'); return; }
   try{
-    const { data: sessionData } = await sb.auth.getSession();
-    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp-remarketing`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${sessionData.session.access_token}` },
-      body: JSON.stringify({
-        destinatarios: alvos.map(l=>({ leadId:l.id, telefone:l.telefone, nome:l.nome })),
-        mensagem,
-        foto: fotoDataUrl
-      })
-    });
-    const out = await resp.json();
-    if(!resp.ok){ alert('Erro ao enviar: ' + (out.error||'tente novamente.')); return; }
-    const enviados = out.enviados!=null ? out.enviados : alvos.length;
+    const { data: userData } = await sb.auth.getUser();
+    const linhas = alvos.map(l=>({
+      lead_id: l.id,
+      telefone: l.telefone,
+      nome: l.nome,
+      mensagem,
+      foto_base64: fotoDataUrl || null,
+      status: 'pendente',
+      criado_por: userData?.user?.id || null
+    }));
+    const { error } = await sb.from('remarketing_fila').insert(linhas);
+    if(error){ alert('Erro ao agendar o envio: ' + error.message); return; }
     alvos.forEach(l=>{
       l.interacoes = l.interacoes || [];
-      l.interacoes.push({ data: todayISO(), descricao: `Remarketing enviado via WhatsApp: "${mensagem}"` });
+      l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${mensagem}"` });
       l.ultimoContato = todayISO();
     });
     leadSelected.clear();
     leadSelectMode = false;
     save(); closeModal(); renderLeads();
-    toast(`Mensagem de remarketing enviada para ${enviados} cliente(s).`);
+    toast(`Mensagem de remarketing agendada para ${alvos.length} cliente(s). Envio automático em instantes.`);
   }catch(err){
     console.error(err);
-    alert('Erro ao enviar as mensagens. Tente novamente.');
+    alert('Erro ao agendar as mensagens. Tente novamente.');
   }
 }
 

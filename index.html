@@ -768,7 +768,7 @@ let currentView = 'dashboard';
 // Retorna o motivo da pendência ({tipo, dias}) ou null se o lead estiver com uma próxima ação agendada em dia.
 // Regra: todo lead precisa ter um próximo compromisso agendado (futuro). Sem isso, é pendência na hora — não espera dias.
 function leadPendenciaInfo(lead){
-  if(['Fechou','Perdido'].includes(lead.status)) return null;
+  if(['Fechou','Perdido','Remarketing'].includes(lead.status)) return null;
   const hoje = todayISO();
   const agoraHora = new Date().toTimeString().slice(0,5);
   const compsDoLead = state.compromissos.filter(cm=>cm.leadId===lead.id && cm.status==='Pendente');
@@ -977,7 +977,7 @@ function renderDashboard(){
   const comissoes = scoped(state.comissoes);
   const clientes = scoped(state.clientes);
 
-  const leadsAbertos = leads.filter(l=>!['Fechou','Perdido'].includes(l.status));
+  const leadsAbertos = leads.filter(l=>!['Fechou','Perdido','Remarketing'].includes(l.status));
   const taxaConv = leads.length ? Math.round(100*leads.filter(l=>l.status==='Fechou').length/leads.length) : 0;
   const mesAtual = todayISO().slice(0,7);
   const receitaMes = receitas.filter(r=>r.data && r.data.slice(0,7)===mesAtual).reduce((s,r)=>s+Number(r.valor||0),0)
@@ -1102,7 +1102,7 @@ function emptyState(title, sub){ return `<div class="empty"><b>${title}</b>${sub
 function stamp(status){
   const map = {
     'Novo':'s-latao','Em Contato':'s-azul','Agendou Visita':'s-azul','Visitou':'s-verde',
-    'Negociando':'s-latao','Fechou':'s-verde','Perdido':'s-vermelho',
+    'Negociando':'s-latao','Fechou':'s-verde','Remarketing':'s-azul','Perdido':'s-vermelho',
     'Disponível':'s-verde','Reservado':'s-latao','Vendido':'s-ink','Locado':'s-ink','Em Negociação':'s-azul',
     'Pendente':'s-latao','Concluído':'s-verde','Cancelado':'s-vermelho',
     'Recebido':'s-verde','A receber':'s-latao','Ativo':'s-verde','Inativo':'s-ink'
@@ -1122,7 +1122,7 @@ function roletaBadgeHtml(lead){
 /* ============================================================
    LEADS
 ============================================================ */
-const LEAD_STATUSES = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou','Perdido'];
+const LEAD_STATUSES = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou','Remarketing','Perdido'];
 const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','OLX','ZAP','Viva Real','Portaria','Outros'];
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 
@@ -1160,6 +1160,7 @@ function renderLeads(){
       <span>Leads</span>
       <div style="display:flex; gap:8px; flex-wrap:wrap;">
         ${canManageTeam() && leadSelectMode && leadSelected.size ? `<button class="btn btn-sm" id="btnTransferirLeads">↪ Transferir para... (${leadSelected.size})</button>` : ''}
+        ${canManageTeam() && leadSelectMode && leadSelected.size && leadFilter==='Remarketing' ? `<button class="btn btn-sm" id="btnEnviarRemarketing">📨 Enviar mensagem (${leadSelected.size})</button>` : ''}
         ${canManageTeam() ? `<button class="btn btn-outline btn-sm" id="btnSelecionarLeads">${leadSelectMode ? 'Cancelar seleção' : '☑ Selecionar'}</button>` : ''}
         <button class="btn btn-outline btn-sm" id="toggleKanban">${leadView==='lista'?'⊞ Ver kanban':'≡ Ver lista'}</button>
         <button class="btn btn-outline btn-sm" id="btnImportarExcel">⇧ Importar Excel</button>
@@ -1200,6 +1201,8 @@ function renderLeads(){
   });
   const btnTransf = document.getElementById('btnTransferirLeads');
   if(btnTransf) btnTransf.addEventListener('click', ()=>openTransferirLeadsForm());
+  const btnRemkt = document.getElementById('btnEnviarRemarketing');
+  if(btnRemkt) btnRemkt.addEventListener('click', ()=>openEnviarRemarketingForm());
 
   let pool = base;
   if(canManageTeam() && leadCorretorFilter!=='Todos'){
@@ -1272,6 +1275,84 @@ function openTransferirLeadsForm(){
       toast(`${ids.length} lead(s) transferido(s) para ${u.nome}.`);
     }
   });
+}
+
+function openEnviarRemarketingForm(){
+  const ids = Array.from(leadSelected);
+  if(!ids.length) return;
+  let fotoAtual = null;
+  const nomesSelecionados = state.leads.filter(l=>ids.includes(l.id)).map(l=>l.nome).join(', ');
+  openModal({
+    title: `Enviar mensagem de remarketing para ${ids.length} cliente(s)`,
+    schema: [
+      {key:'mensagem', label:'Mensagem', type:'textarea'}
+    ],
+    data: {},
+    extraHtml: `
+      <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Vai para: ${nomesSelecionados}</p>
+      <div class="field">
+        <label>Foto (opcional, vai anexada à mensagem)</label>
+        <div class="logo-edit-wrap">
+          <div class="logo-preview" id="remktFotoPreview">—</div>
+          <div>
+            <input type="file" id="remktFotoFile" accept="image/*">
+          </div>
+        </div>
+      </div>
+    `,
+    onSave: async (r)=>{
+      if(!r.mensagem || !r.mensagem.trim()){ alert('Escreva a mensagem.'); return; }
+      await sendRemarketingWhatsapp(ids, r.mensagem.trim(), fotoAtual);
+    }
+  });
+  const fotoInput = document.getElementById('remktFotoFile');
+  if(fotoInput) fotoInput.addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      fotoAtual = reader.result;
+      document.getElementById('remktFotoPreview').innerHTML = `<img src="${fotoAtual}">`;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
+  const leadsAlvo = state.leads.filter(l=>ids.includes(l.id));
+  const semTelefone = leadsAlvo.filter(l=>!l.telefone);
+  if(semTelefone.length){
+    alert(`${semTelefone.length} cliente(s) selecionado(s) não têm telefone cadastrado e serão ignorados: ${semTelefone.map(l=>l.nome).join(', ')}`);
+  }
+  const alvos = leadsAlvo.filter(l=>l.telefone);
+  if(!alvos.length){ alert('Nenhum cliente selecionado tem telefone cadastrado.'); return; }
+  try{
+    const { data: sessionData } = await sb.auth.getSession();
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-whatsapp-remarketing`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization': `Bearer ${sessionData.session.access_token}` },
+      body: JSON.stringify({
+        destinatarios: alvos.map(l=>({ leadId:l.id, telefone:l.telefone, nome:l.nome })),
+        mensagem,
+        foto: fotoDataUrl
+      })
+    });
+    const out = await resp.json();
+    if(!resp.ok){ alert('Erro ao enviar: ' + (out.error||'tente novamente.')); return; }
+    const enviados = out.enviados!=null ? out.enviados : alvos.length;
+    alvos.forEach(l=>{
+      l.interacoes = l.interacoes || [];
+      l.interacoes.push({ data: todayISO(), descricao: `Remarketing enviado via WhatsApp: "${mensagem}"` });
+      l.ultimoContato = todayISO();
+    });
+    leadSelected.clear();
+    leadSelectMode = false;
+    save(); closeModal(); renderLeads();
+    toast(`Mensagem de remarketing enviada para ${enviados} cliente(s).`);
+  }catch(err){
+    console.error(err);
+    alert('Erro ao enviar as mensagens. Tente novamente.');
+  }
 }
 
 function bindKanbanEvents(body){

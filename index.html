@@ -1466,15 +1466,24 @@ function openEnviarRemarketingForm(){
   const btnSugerirIA = document.getElementById('remktSugerirIA');
   if(btnSugerirIA) btnSugerirIA.addEventListener('click', ()=>sugerirMensagemComIA(ids, btnSugerirIA));
   const fotoInput = document.getElementById('remktFotoFile');
-  if(fotoInput) fotoInput.addEventListener('change', (e)=>{
+  if(fotoInput) fotoInput.addEventListener('change', async (e)=>{
     const file = e.target.files[0];
     if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      fotoAtual = reader.result;
-      document.getElementById('remktFotoPreview').innerHTML = `<img src="${fotoAtual}">`;
-    };
-    reader.readAsDataURL(file);
+    const preview = document.getElementById('remktFotoPreview');
+    preview.innerHTML = 'Preparando imagem...';
+    try{
+      // A mesma foto é gravada em cada lead selecionado — se o arquivo original for grande
+      // (foto de celular, print em alta resolução), enviar pra uma lista grande de clientes
+      // de uma vez pode estourar o tempo limite do banco. Por isso redimensiona/comprime
+      // antes de guardar, sem perder qualidade perceptível no WhatsApp.
+      fotoAtual = await comprimirImagemParaEnvio(file);
+      preview.innerHTML = `<img src="${fotoAtual}">`;
+    }catch(err){
+      console.error(err);
+      preview.innerHTML = '—';
+      fotoAtual = null;
+      alert('Não consegui processar essa imagem. Tente outra foto.');
+    }
   });
   const btnInserirNome = document.getElementById('remktInserirNome');
   if(btnInserirNome) btnInserirNome.addEventListener('click', ()=>{
@@ -1484,6 +1493,33 @@ function openEnviarRemarketingForm(){
     ta.value = ta.value.slice(0,inicio) + '{nome}' + ta.value.slice(fim);
     ta.focus();
     ta.selectionStart = ta.selectionEnd = inicio + 6;
+  });
+}
+
+// Redimensiona/comprime uma imagem escolhida pelo usuário antes de guardar como data URL,
+// pra evitar mandar um arquivo gigante (foto de celular costuma vir com vários MB) pro banco.
+function comprimirImagemParaEnvio(file){
+  const MAX_LADO = 1280;
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > MAX_LADO || h > MAX_LADO){
+          if(w >= h){ h = Math.round(h * MAX_LADO / w); w = MAX_LADO; }
+          else{ w = Math.round(w * MAX_LADO / h); h = MAX_LADO; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = ()=>reject(new Error('Não consegui abrir a imagem.'));
+      img.src = reader.result;
+    };
+    reader.onerror = ()=>reject(new Error('Não consegui ler o arquivo.'));
+    reader.readAsDataURL(file);
   });
 }
 
@@ -1561,21 +1597,43 @@ async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
       status: 'pendente',
       criado_por: userData?.user?.id || null
     }));
-    const { error } = await sb.from('remarketing_fila').insert(linhas);
-    if(error){ alert('Erro ao agendar o envio: ' + error.message); return; }
-    alvos.forEach(l=>{
-      l.interacoes = l.interacoes || [];
-      l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${mensagem}"` });
-      l.ultimoContato = todayISO();
-    });
-    leadSelected.clear();
-    leadSelectMode = false;
-    save(); closeModal(); renderLeads();
-    toast(`Mensagem de remarketing agendada para ${alvos.length} cliente(s). Envio automático em instantes.`);
+    // Grava em lotes pequenos em vez de um INSERT só com todo mundo de uma vez — a mesma
+    // foto entra em cada linha, e para uma lista grande isso pode passar do tempo limite
+    // do banco ("statement timeout"), como aconteceu ao mandar pra 45 clientes de uma vez.
+    const TAMANHO_LOTE = 12;
+    const enviados = [];
+    for(let i=0; i<linhas.length; i+=TAMANHO_LOTE){
+      const lotePessoas = alvos.slice(i, i+TAMANHO_LOTE);
+      const loteLinhas = linhas.slice(i, i+TAMANHO_LOTE);
+      const { error } = await sb.from('remarketing_fila').insert(loteLinhas);
+      if(error){
+        if(enviados.length){
+          alert(`Deu erro no meio do envio: ${error.message}\n\n${enviados.length} de ${linhas.length} já foram agendados normalmente. Selecione os demais e tente reenviar só pra eles.`);
+          finalizarRemarketing(enviados, mensagem);
+        }else{
+          alert('Erro ao agendar o envio: ' + error.message);
+        }
+        return;
+      }
+      enviados.push(...lotePessoas);
+    }
+    finalizarRemarketing(enviados, mensagem);
   }catch(err){
     console.error(err);
     alert('Erro ao agendar as mensagens. Tente novamente.');
   }
+}
+
+function finalizarRemarketing(alvos, mensagem){
+  alvos.forEach(l=>{
+    l.interacoes = l.interacoes || [];
+    l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${mensagem}"` });
+    l.ultimoContato = todayISO();
+  });
+  leadSelected.clear();
+  leadSelectMode = false;
+  save(); closeModal(); renderLeads();
+  toast(`Mensagem de remarketing agendada para ${alvos.length} cliente(s). Envio automático em instantes.`);
 }
 
 function bindKanbanEvents(body){

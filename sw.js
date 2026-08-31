@@ -1,6 +1,6 @@
 // Service worker: instala o site como app (Android/iOS), cacheia o "shell" básico,
 // e agora também recebe notificações push reais enviadas pelo servidor (funciona com o app fechado).
-const CACHE = 'imobicrm-shell-v3';
+const CACHE = 'imobicrm-shell-v4';
 const SHELL = ['./index.html', './config.js', './manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -24,7 +24,7 @@ self.addEventListener('fetch', (event) => {
   const url = event.request.url;
   if (url.includes('supabase.co')) return; // nunca cachear chamadas de API/dados
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request, { cache: 'no-store' }).catch(() => caches.match(event.request))
   );
 });
 

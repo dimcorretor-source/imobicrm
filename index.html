@@ -1745,7 +1745,10 @@ async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
 function finalizarRemarketing(alvos, mensagem){
   alvos.forEach(l=>{
     l.interacoes = l.interacoes || [];
-    l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${mensagem}"` });
+    // Registra o texto já personalizado (com o nome de cada um), igual ao que realmente vai
+    // pro WhatsApp — antes ficava salvo o {nome} literal, mostrando um texto diferente do que
+    // o bot registra quando o envio de fato acontece.
+    l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${personalizarMensagem(mensagem, l)}"` });
     l.ultimoContato = todayISO();
   });
   leadSelected.clear();
@@ -5935,7 +5938,10 @@ async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
 function finalizarRemarketing(alvos, mensagem){
   alvos.forEach(l=>{
     l.interacoes = l.interacoes || [];
-    l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${mensagem}"` });
+    // Registra o texto já personalizado (com o nome de cada um), igual ao que realmente vai
+    // pro WhatsApp — antes ficava salvo o {nome} literal, mostrando um texto diferente do que
+    // o bot registra quando o envio de fato acontece.
+    l.interacoes.push({ data: todayISO(), descricao: `Remarketing agendado via WhatsApp: "${personalizarMensagem(mensagem, l)}"` });
     l.ultimoContato = todayISO();
   });
   leadSelected.clear();

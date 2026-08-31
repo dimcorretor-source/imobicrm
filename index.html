@@ -1203,7 +1203,7 @@ function roletaBadgeHtml(lead){
    LEADS
 ============================================================ */
 const LEAD_STATUSES = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou','Remarketing','Perdido'];
-const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','OLX','ZAP','Viva Real','Portaria','Outros'];
+const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','Facebook','OLX','ZAP','Viva Real','Portaria','Outros'];
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
 const LEAD_FAIXAS_RENDA = ['Até R$ 3.000','R$ 3.001 – R$ 6.000','R$ 6.001 – R$ 10.000','R$ 10.001 – R$ 20.000','Acima de R$ 20.000'];
@@ -2052,10 +2052,13 @@ const LEAD_FIELD_ALIASES = {
   observacoes: ['observacao','observacoes','obs','notas','nota']
 };
 // Compara o valor de origem vindo da planilha com as opções fixas do sistema, ignorando
-// maiúscula/minúscula, acento e espaçamento (ex.: "site", "SITE", " Site " tudo vira "Site").
+// maiúscula/minúscula, acento e espaçamento (ex.: "site", "SITE", " Site " tudo vira "Site"),
+// e também reconhece siglas comuns usadas em planilhas de anúncio (ex.: "fb" = Facebook).
+const ORIGEM_SIGLAS = { fb:'Facebook', face:'Facebook', ig:'Instagram', insta:'Instagram', wpp:'WhatsApp', zap:'ZAP' };
 function matchOrigem(v){
   if(!v) return null;
   const norm = normalizeHeader(v);
+  if(ORIGEM_SIGLAS[norm]) return ORIGEM_SIGLAS[norm];
   return LEAD_ORIGENS.find(o=>normalizeHeader(o)===norm) || null;
 }
 function mapRowToLead(row){

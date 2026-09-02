@@ -414,8 +414,8 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
 
 function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null }; }
 function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null }; }
@@ -1218,6 +1218,7 @@ function leadSchema(){
     {key:'telefone', label:'Telefone'},
     {key:'email', label:'E-mail'},
     {key:'origem', label:'Origem', type:'select', options:LEAD_ORIGENS},
+    {key:'criativo', label:'Criativo/anúncio (opcional)'},
     {key:'tipo', label:'Tipo', type:'select', options:LEAD_TIPOS},
     {key:'cidade', label:'Cidade (opcional)'},
     {key:'profissao', label:'Profissão (opcional)', type:'select', options:['(não informado)', ...LEAD_PROFISSOES]},
@@ -1907,6 +1908,7 @@ function openLeadDetail(id){
           <div><b>Telefone:</b> ${lead.telefone||'—'}</div>
           <div><b>E-mail:</b> ${lead.email||'—'}</div>
           <div><b>Origem:</b> ${lead.origem}</div>
+          <div><b>Criativo/anúncio:</b> ${lead.criativo||'—'}</div>
           <div><b>Tipo:</b> ${lead.tipo}</div>
           <div><b>Cidade:</b> ${lead.cidade||'—'}</div>
           <div><b>Profissão:</b> ${lead.profissao||'—'}</div>
@@ -2044,6 +2046,7 @@ const LEAD_FIELD_ALIASES = {
   telefone: ['telefone','fone','celular','whatsapp','phone','contato'],
   email: ['email'],
   origem: ['origem','fonte','source'],
+  criativo: ['criativo','anuncio','adname','nomeanuncio','creative'],
   tipo: ['tipo','categoria'],
   orcamento: ['orcamento','budget','valor'],
   cidade: ['cidade','city','municipio'],
@@ -2157,6 +2160,7 @@ function confirmImportLeads(mapped){
           if(m.telefone) dup.telefone = String(m.telefone);
           if(m.email) dup.email = String(m.email);
           if(m.cidade) dup.cidade = tituloCidade(m.cidade);
+          if(m.criativo) dup.criativo = String(m.criativo).trim();
           { const om = matchOrigem(m.origem); if(om) dup.origem = om; }
           if(m.bairrosInteresse) dup.bairrosInteresse = String(m.bairrosInteresse);
           if(m.tipoImovelDesejado) dup.tipoImovelDesejado = String(m.tipoImovelDesejado);
@@ -2168,6 +2172,7 @@ function confirmImportLeads(mapped){
           state.leads.push({
             id: uid(), nome:String(m.nome||'').trim(), telefone:String(m.telefone||''), email:String(m.email||''),
             origem: matchOrigem(m.origem) || 'Outros',
+            criativo: String(m.criativo||'').trim(),
             tipo: LEAD_TIPOS.includes(m.tipo)?m.tipo:'Comprador',
             orcamento: parseFloat(m.orcamento)||0,
             cidade: m.cidade ? tituloCidade(m.cidade) : '',

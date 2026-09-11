@@ -312,7 +312,15 @@ tr:hover td{background:var(--paper-2);}
 .pbi-toolbar{display:flex; flex-wrap:wrap; gap:10px 14px; margin-bottom:20px; align-items:flex-end;}
 .pbi-field{display:flex; flex-direction:column; gap:4px;}
 .pbi-field label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--pbi-ink-soft);}
-.pbi-field select{background:var(--pbi-card); border:1px solid var(--pbi-line); color:var(--pbi-ink); border-radius:6px; padding:7px 10px; font-size:12.5px; min-width:170px;}
+.pbi-field select, .pbi-field input{background:var(--pbi-card); border:1px solid var(--pbi-line); color:var(--pbi-ink); border-radius:6px; padding:7px 10px; font-size:12.5px; min-width:170px;}
+.pbi-indicadores{display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:16px;}
+.pbi-indicador{background:var(--pbi-card-2); border:1px solid var(--pbi-line); border-radius:8px; padding:10px 12px; text-align:center;}
+.pbi-indicador-sigla{font-size:13px; font-weight:700;}
+.pbi-indicador-desc{font-size:10px; color:var(--pbi-ink-soft); margin:2px 0 6px 0;}
+.pbi-indicador-valor{font-size:15px; font-weight:700; font-family:var(--mono);}
+.pbi-conversoes{display:flex; flex-wrap:wrap; gap:8px; font-size:11.5px;}
+.pbi-conversoes span{background:var(--pbi-card-2); border:1px solid var(--pbi-line); border-radius:20px; padding:5px 12px; white-space:nowrap;}
+@media (max-width: 720px){ .pbi-indicadores{grid-template-columns:repeat(3,1fr);} }
 .pbi-kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
 .pbi-kpi{background:var(--pbi-card); border:1px solid var(--pbi-line); border-radius:10px; padding:16px 18px;}
 .pbi-kpi-label{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--pbi-ink-soft);}
@@ -398,7 +406,7 @@ function defaultState(){
     config: { nome: 'ImobiCRM', logo: null, subtitulo: 'Corretor', cidades: 'Mogi Mirim, Holambra e Piracicaba', meta: 30000, theme: defaultTheme() },
     roletaConfig: { participantes: [], ativa: true, prazoMinutos: 20 },
     usuarios: [], produtos: [], imobiliarias: [],
-    leads: [], clientes: [], imoveis: [], compromissos: [], comissoes: [], despesas: [], receitas: []
+    leads: [], clientes: [], imoveis: [], compromissos: [], comissoes: [], despesas: [], receitas: [], investimentos: []
   };
 }
 let state = defaultState();
@@ -416,8 +424,11 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+
+function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
+function investimentoToRow(inv){ return { id:inv.id, produto_id:inv.produtoId||null, mes:inv.mes, valor:Number(inv.valor||0) }; }
 
 function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null }; }
 function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null }; }
@@ -462,10 +473,11 @@ async function fetchAllRows(table, columns){
   return all;
 }
 async function pullAllData(){
-  const [leadsData, clientesData, imoveisData, compData, comisData, despData, recData, profR, cfgR, prodR, imobR, roletaR] = await Promise.all([
+  const [leadsData, clientesData, imoveisData, compData, comisData, despData, recData, invData, profR, cfgR, prodR, imobR, roletaR] = await Promise.all([
     fetchAllRows('leads'), fetchAllRows('clientes'), fetchAllRows('imoveis'),
     fetchAllRows('compromissos'), fetchAllRows('comissoes'), fetchAllRows('despesas'),
-    fetchAllRows('receitas'), sb.from('profiles').select('*'), sb.from('config').select('*').eq('id',1).maybeSingle(),
+    fetchAllRows('receitas'), fetchAllRows('investimentos_mkt'),
+    sb.from('profiles').select('*'), sb.from('config').select('*').eq('id',1).maybeSingle(),
     sb.from('produtos').select('*'), sb.from('imobiliarias').select('*'), sb.from('roleta_config').select('*').eq('id','default').maybeSingle()
   ]);
   state.leads = leadsData.map(rowToLead);
@@ -475,6 +487,7 @@ async function pullAllData(){
   state.comissoes = comisData.map(rowToComissao);
   state.despesas = despData.map(rowToDespesa);
   state.receitas = recData.map(rowToReceita);
+  state.investimentos = invData.map(rowToInvestimento);
   state.usuarios = (profR.data||[]).map(p=>({id:p.id, nome:p.nome, papel:p.papel, telefone:p.telefone, creci:p.creci, imobiliariaId:p.imobiliaria_id, disponivelRoleta:!!p.disponivel_roleta, avatarUrl:p.avatar_url||null}));
   state.produtos = (prodR.data||[]).map(rowToProduto);
   state.imobiliarias = (imobR.data||[]).map(rowToImobiliaria);
@@ -537,6 +550,7 @@ async function syncToSupabase(){
     if(isGestor()){
       await syncTable('produtos', state.produtos, produtoToRow);
       await syncTable('imobiliarias', state.imobiliarias, imobiliariaToRow);
+      await syncTable('investimentos_mkt', state.investimentos, investimentoToRow);
       await sb.from('config').upsert([{ id:1, nome: state.config.nome, logo: state.config.logo, subtitulo: state.config.subtitulo, cidades: state.config.cidades, meta: state.config.meta, theme: state.config.theme }], {onConflict:'id'});
     }
   }catch(e){ console.error('Erro ao sincronizar com o Supabase', e); }
@@ -552,6 +566,9 @@ function save(){
 function fmtMoney(n){ n = Number(n)||0; return n.toLocaleString('pt-BR', {style:'currency', currency:'BRL'}); }
 function fmtDate(d){ if(!d) return '—'; const [y,m,day] = d.split('-'); if(!y) return d; return `${day}/${m}/${y}`; }
 function todayISO(){ return new Date().toISOString().slice(0,10); }
+const NOMES_MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function fmtMesAno(mes){ if(!mes) return '—'; const [ano,m] = mes.split('-'); return NOMES_MES[Number(m)-1] + '/' + ano; }
+function mesAtualISO(){ return todayISO().slice(0,7); }
 function daysBetween(d1,d2){ return Math.round((new Date(d2) - new Date(d1)) / 86400000); }
 
 /* Link "Adicionar ao Google Agenda" (sem necessidade de login/OAuth — abre o formulário pronto do Google) */
@@ -1202,8 +1219,8 @@ function emptyState(title, sub){ return `<div class="empty"><b>${title}</b>${sub
 
 function stamp(status){
   const map = {
-    'Novo':'s-latao','Em Contato':'s-azul','Agendou Visita':'s-azul','Visitou':'s-verde',
-    'Negociando':'s-latao','Fechou':'s-verde','Remarketing':'s-azul','Perdido':'s-vermelho',
+    'Novo':'s-latao','Em Contato':'s-azul','Qualificado':'s-azul','Agendou Visita':'s-azul','Visitou':'s-verde',
+    'Proposta':'s-latao','Negociando':'s-latao','Fechou':'s-verde','Remarketing':'s-azul','Perdido':'s-vermelho',
     'Disponível':'s-verde','Reservado':'s-latao','Vendido':'s-ink','Locado':'s-ink','Em Negociação':'s-azul',
     'Pendente':'s-latao','Concluído':'s-verde','Cancelado':'s-vermelho',
     'Recebido':'s-verde','A receber':'s-latao','Ativo':'s-verde','Inativo':'s-ink'
@@ -1223,7 +1240,22 @@ function roletaBadgeHtml(lead){
 /* ============================================================
    LEADS
 ============================================================ */
-const LEAD_STATUSES = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou','Remarketing','Perdido'];
+const LEAD_STATUSES = ['Novo','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou','Remarketing','Perdido'];
+// Mapeia cada etapa do funil pro campo de data que marca a PRIMEIRA vez que o lead chegou nela.
+// Uma vez marcada, a data nunca é apagada depois (mesmo que o lead avance mais ou volte de
+// status) -- é isso que permite ao relatório de mensuração (CPL, CPQL, CPVA, CPVR, CPP, CAC)
+// contar quantos leads CHEGARAM em cada etapa, não só quantos estão hoje ali.
+const CAMPO_DATA_ETAPA = {
+  'Qualificado': 'dataQualificado',
+  'Agendou Visita': 'dataVisitaAgendada',
+  'Visitou': 'dataVisitaRealizada',
+  'Proposta': 'dataProposta',
+  'Fechou': 'dataVenda'
+};
+function marcarDataEtapa(lead, status){
+  const campo = CAMPO_DATA_ETAPA[status];
+  if(campo && !lead[campo]) lead[campo] = todayISO();
+}
 const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','Facebook','OLX','ZAP','Viva Real','Portaria','Outros'];
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
@@ -1842,6 +1874,7 @@ function changeLeadStatus(lead, novoStatus, after){
     lead.observacoes = (lead.observacoes?lead.observacoes+' | ':'') + (motivo?('Perdido: '+motivo):'Perdido.');
   }
   lead.status = novoStatus;
+  marcarDataEtapa(lead, novoStatus);
   if(lead.roletaStatus === 'aguardando') lead.roletaStatus = 'atendido';
   save();
   toast('Status atualizado para "'+novoStatus+'".');
@@ -1870,6 +1903,7 @@ function changeLeadStatusBulk(ids, novoStatus, after){
       lead.observacoes = (lead.observacoes?lead.observacoes+' | ':'') + (motivo?('Perdido: '+motivo):'Perdido.');
     }
     lead.status = novoStatus;
+    marcarDataEtapa(lead, novoStatus);
     if(lead.roletaStatus === 'aguardando') lead.roletaStatus = 'atendido';
     movidos++;
   });
@@ -1925,7 +1959,10 @@ function openLeadDetail(id){
       <div class="modal">
         <button class="btn-sm btn-outline modal-close" id="closeDetail">Fechar</button>
         <h3>${lead.nome}</h3>
-        <div style="margin-bottom:14px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
+        <div style="margin-bottom:6px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
+        <div style="margin-bottom:14px; font-size:11px; color:var(--ink-soft);">
+          ${[['Qualificado',lead.dataQualificado],['Visita agendada',lead.dataVisitaAgendada],['Visita realizada',lead.dataVisitaRealizada],['Proposta',lead.dataProposta],['Venda',lead.dataVenda]].filter(([,d])=>d).map(([label,d])=>`✓ ${label}: ${fmtDate(d)}`).join('   ')}
+        </div>
         <div class="grid grid-2" style="margin-bottom:16px; font-size:13px;">
           <div><b>Telefone:</b> ${lead.telefone||'—'}</div>
           <div><b>E-mail:</b> ${lead.email||'—'}</div>
@@ -2043,6 +2080,7 @@ function openFecharLeadFlow(lead, after){
     data:{imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', novoStatusImovel:'Não alterar', profissao: lead.profissao||''},
     onSave:(result)=>{
       lead.status = 'Fechou';
+      marcarDataEtapa(lead, 'Fechou');
       const imSel = state.imoveis.find(i=>i.codigo===result.imovelCodigo);
       const vinculados = imSel ? [imSel.id] : [];
       const cliente = Object.assign({
@@ -3249,7 +3287,7 @@ function renderRelatorios(){
   const fechamentos = leads.filter(l=>l.status==='Fechou').length;
   const ticketMedio = fechamentos ? comissoes.reduce((s,cm)=>s+Number(cm.valor||0),0)/fechamentos : 0;
 
-  const negociando = leads.filter(l=>l.status==='Negociando');
+  const negociando = leads.filter(l=>['Proposta','Negociando'].includes(l.status));
   const projecaoNegociando = negociando.reduce((s,l)=>s + Number(l.orcamento||0)*0.03, 0);
 
   const origemCount = {};
@@ -3290,6 +3328,7 @@ function renderRelatorios(){
 let pbiProdutoFilter = 'Todos';
 let pbiCorretorFilter = 'Todos';
 let pbiPeriodoFilter = 'Todos'; // 'Todos' | '30d' | '90d' | 'ano'
+let pbiMesMensuracao = mesAtualISO(); // mês (YYYY-MM) usado só pelo card de Mensuração de funil
 
 function pbiBarRows(items, opts){
   opts = opts || {};
@@ -3379,8 +3418,47 @@ function renderPowerBI(){
   const taxaConv = total ? Math.round(100*fechados/total) : 0;
   const valorPotencial = leads.filter(l=>!['Fechou','Perdido'].includes(l.status)).reduce((s,l)=>s+Number(l.orcamento||0),0);
 
-  const ETAPAS_FUNIL = ['Novo','Em Contato','Agendou Visita','Visitou','Negociando','Fechou'];
+  const ETAPAS_FUNIL = ['Novo','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
   const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
+
+  // ---- Mensuração de funil (CPL, CPQL, CPVA, CPVR, CPP, CAC) por mês, conforme a estrutura de
+  // mensuração: cada indicador conta quantos leads CHEGARAM na etapa naquele mês (pela data em
+  // que a etapa foi marcada pela primeira vez), não quantos estão hoje ali. ----
+  const contarNoMes = (campo, mes) => leads.filter(l => l[campo] && l[campo].slice(0,7) === mes).length;
+  const mLead = contarNoMes('dataCriacao', pbiMesMensuracao);
+  const mQualificado = contarNoMes('dataQualificado', pbiMesMensuracao);
+  const mVisitaAgendada = contarNoMes('dataVisitaAgendada', pbiMesMensuracao);
+  const mVisitaRealizada = contarNoMes('dataVisitaRealizada', pbiMesMensuracao);
+  const mProposta = contarNoMes('dataProposta', pbiMesMensuracao);
+  const mVenda = contarNoMes('dataVenda', pbiMesMensuracao);
+  let investimentoItens = state.investimentos.filter(i=>i.mes===pbiMesMensuracao);
+  if(pbiProdutoFilter !== 'Todos'){
+    const prodInv = state.produtos.find(p=>p.nome===pbiProdutoFilter);
+    investimentoItens = investimentoItens.filter(i=>prodInv && i.produtoId===prodInv.id);
+  }
+  const investimentoMes = investimentoItens.reduce((s,i)=>s+Number(i.valor||0), 0);
+  const custoPor = n => (investimentoMes>0 && n>0) ? fmtMoney(investimentoMes/n) : '—';
+  const convPct = (a,b) => b>0 ? Math.round(100*a/b) : 0;
+  const funilMensuracaoDados = [
+    {label:'Lead (CPL)', value:mLead}, {label:'Qualificado (CPQL)', value:mQualificado},
+    {label:'Visita agendada (CPVA)', value:mVisitaAgendada}, {label:'Visita realizada (CPVR)', value:mVisitaRealizada},
+    {label:'Proposta (CPP)', value:mProposta}, {label:'Venda (CAC)', value:mVenda}
+  ];
+  const indicadoresCusto = [
+    {sigla:'CPL', desc:'Custo por lead', valor:custoPor(mLead)},
+    {sigla:'CPQL', desc:'Custo por qualificado', valor:custoPor(mQualificado)},
+    {sigla:'CPVA', desc:'Custo por visita agendada', valor:custoPor(mVisitaAgendada)},
+    {sigla:'CPVR', desc:'Custo por visita realizada', valor:custoPor(mVisitaRealizada)},
+    {sigla:'CPP', desc:'Custo por proposta', valor:custoPor(mProposta)},
+    {sigla:'CAC', desc:'Custo por venda', valor:custoPor(mVenda)}
+  ];
+  const conversoesEtapa = [
+    {de:'Lead', para:'Qualificado', pct:convPct(mQualificado, mLead)},
+    {de:'Qualificado', para:'Visita agendada', pct:convPct(mVisitaAgendada, mQualificado)},
+    {de:'Visita agendada', para:'Visita realizada', pct:convPct(mVisitaRealizada, mVisitaAgendada)},
+    {de:'Visita realizada', para:'Proposta', pct:convPct(mProposta, mVisitaRealizada)},
+    {de:'Proposta', para:'Venda', pct:convPct(mVenda, mProposta)}
+  ];
 
   const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
   const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:7});
@@ -3395,7 +3473,6 @@ function renderPowerBI(){
     const d = new Date(hoje.getFullYear(), hoje.getMonth()-i, 1);
     mesesArr.push(d.toISOString().slice(0,7));
   }
-  const NOMES_MES = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
   const labelsMes = mesesArr.map(m=>{
     const [ano,mes] = m.split('-');
     return NOMES_MES[Number(mes)-1] + '/' + ano.slice(2);
@@ -3448,6 +3525,27 @@ function renderPowerBI(){
       pbiBarRows(funilDados, {color:'var(--pbi-teal)'})
     )}
 
+    <div class="pbi-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px; margin-bottom:4px;">
+        <div>
+          <div class="pbi-card-title">Mensuração de funil</div>
+          <div class="pbi-card-sub" style="margin-bottom:0;">Quantos leads chegaram em cada etapa no mês, e quanto custou gerar cada um (com base no investimento em anúncio lançado em Produtos → 💰 Investimento).</div>
+        </div>
+        <div class="pbi-field">
+          <label>Mês</label>
+          <input type="month" id="pbiFiltroMes" value="${pbiMesMensuracao}">
+        </div>
+      </div>
+      <div style="font-size:12px; color:var(--pbi-ink-soft); margin:10px 0 14px 0;">Investimento no mês${pbiProdutoFilter!=='Todos'?' ('+pbiProdutoFilter+')':' (todos os produtos)'}: <b style="color:var(--pbi-ink);">${investimentoMes>0?fmtMoney(investimentoMes):'não lançado'}</b></div>
+      ${pbiBarRows(funilMensuracaoDados, {color:'var(--pbi-gold)'})}
+      <div class="pbi-indicadores" style="margin-top:16px;">
+        ${indicadoresCusto.map(i=>`<div class="pbi-indicador"><div class="pbi-indicador-sigla">${i.sigla}</div><div class="pbi-indicador-desc">${i.desc}</div><div class="pbi-indicador-valor">${i.valor}</div></div>`).join('')}
+      </div>
+      <div class="pbi-conversoes">
+        ${conversoesEtapa.map(c=>`<span>${c.de} → ${c.para}: <b>${c.pct}%</b></span>`).join('')}
+      </div>
+    </div>
+
     <div class="pbi-grid2">
       ${pbiCard('Leads por origem', 'De onde estão vindo os leads.', pbiBarRows(porOrigem.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-teal)'}))}
       ${pbiCard('Conversão por origem', '% dos leads de cada origem que já fecharam.', pbiBarRows(porOrigem.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%'}))}
@@ -3492,6 +3590,8 @@ function renderPowerBI(){
   if(selCorr) selCorr.addEventListener('change', ()=>{ pbiCorretorFilter = selCorr.value; renderPowerBI(); });
   const selPer = document.getElementById('pbiFiltroPeriodo');
   if(selPer) selPer.addEventListener('change', ()=>{ pbiPeriodoFilter = selPer.value; renderPowerBI(); });
+  const selMes = document.getElementById('pbiFiltroMes');
+  if(selMes) selMes.addEventListener('change', ()=>{ pbiMesMensuracao = selMes.value || mesAtualISO(); renderPowerBI(); });
 }
 
 /* ============================================================
@@ -3539,6 +3639,7 @@ function renderProdutos(){
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="btn-sm btn-outline copy-link" data-id="${p.id}">🔗 Copiar link do formulário</button>
         ${isGestor()?`<button class="btn-sm btn-outline edit-produto" data-id="${p.id}">Editar</button>`:''}
+        ${isGestor()?`<button class="btn-sm btn-outline investimento-produto" data-id="${p.id}">💰 Investimento</button>`:''}
         ${isGestor()?`<button class="btn-sm btn-danger del-produto" data-id="${p.id}">🗑 Excluir loteamento</button>`:''}
       </div>
     </div>
@@ -3552,6 +3653,9 @@ function renderProdutos(){
   }));
   body.querySelectorAll('.edit-produto').forEach(b=>b.addEventListener('click', ()=>{
     openProdutoForm(state.produtos.find(x=>x.id===b.dataset.id));
+  }));
+  body.querySelectorAll('.investimento-produto').forEach(b=>b.addEventListener('click', ()=>{
+    openInvestimentoProduto(state.produtos.find(x=>x.id===b.dataset.id));
   }));
   body.querySelectorAll('.del-produto').forEach(b=>b.addEventListener('click', ()=>{
     const p = state.produtos.find(x=>x.id===b.dataset.id);
@@ -3576,6 +3680,51 @@ function renderProdutos(){
     save(); renderProdutos();
     toast(`Loteamento excluído${loteIds.length?` junto com ${loteIds.length} lote(s)`:''}.`);
   }));
+}
+
+/* Investimento em anúncio por mês, usado pelo relatório de mensuração de funil (Power BI) pra
+   calcular CPL/CPQL/CPVA/CPVR/CPP/CAC. É por produto porque cada loteamento roda campanha própria. */
+function openInvestimentoProduto(produto){
+  if(!produto) return;
+  const root = document.getElementById('modalRoot');
+  const render = ()=>{
+    const itens = state.investimentos.filter(i=>i.produtoId===produto.id).sort((a,b)=>b.mes.localeCompare(a.mes));
+    root.innerHTML = `
+      <div class="modal-overlay" id="overlay">
+        <div class="modal">
+          <button class="btn-sm btn-outline modal-close" id="closeInv">Fechar</button>
+          <h3>Investimento em anúncio — ${produto.nome}</h3>
+          <p style="font-size:12.5px; color:var(--ink-soft); margin-top:-6px;">Quanto foi investido em anúncio/mídia para esse empreendimento, mês a mês. Usado no Power BI pra calcular CPL, CPQL, CPVA, CPVR, CPP e CAC.</p>
+          <div class="grid grid-3" style="align-items:end; margin-bottom:14px;">
+            <div class="field" style="margin-bottom:0;"><label>Mês</label><input type="month" id="invMes" value="${mesAtualISO()}"></div>
+            <div class="field" style="margin-bottom:0;"><label>Valor investido (R$)</label><input type="number" id="invValor" min="0" step="0.01" placeholder="Ex: 1500"></div>
+            <button class="btn btn-sm" id="btnAddInv">Salvar</button>
+          </div>
+          <table><thead><tr><th>Mês</th><th>Investimento</th><th></th></tr></thead>
+          <tbody>${itens.length ? itens.map(i=>`<tr><td>${fmtMesAno(i.mes)}</td><td class="mono">${fmtMoney(i.valor)}</td><td><button class="btn-sm btn-danger del-inv" data-id="${i.id}">🗑</button></td></tr>`).join('') : '<tr><td colspan="3" style="color:var(--ink-soft);">Nenhum investimento lançado ainda.</td></tr>'}</tbody></table>
+        </div>
+      </div>
+    `;
+    document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+    document.getElementById('closeInv').addEventListener('click', closeModal);
+    document.getElementById('btnAddInv').addEventListener('click', ()=>{
+      const mes = document.getElementById('invMes').value;
+      const valor = parseFloat(document.getElementById('invValor').value);
+      if(!mes){ alert('Escolha o mês.'); return; }
+      if(!(valor >= 0)){ alert('Informe um valor válido.'); return; }
+      const existente = state.investimentos.find(i=>i.produtoId===produto.id && i.mes===mes);
+      if(existente){ existente.valor = valor; }
+      else{ state.investimentos.push({id:uid(), produtoId:produto.id, mes, valor}); }
+      save(); toast('Investimento salvo.'); render();
+    });
+    root.querySelectorAll('.del-inv').forEach(b=>b.addEventListener('click', ()=>{
+      if(!confirm('Excluir esse lançamento de investimento?')) return;
+      state.investimentos = state.investimentos.filter(i=>i.id!==b.dataset.id);
+      if(sb) sb.from('investimentos_mkt').delete().eq('id', b.dataset.id).then(({error})=>{ if(error) console.error(error); });
+      save(); render();
+    }));
+  };
+  render();
 }
 
 function openProdutoForm(existing){

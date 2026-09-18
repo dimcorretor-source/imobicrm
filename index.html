@@ -3505,7 +3505,7 @@ function renderPowerBI(){
   ];
 
   const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
-  const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:12});
+  const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:20});
   const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
   const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
   const porCampanha = agruparComConversao(leads, l=>l.campanha, {limite:7});

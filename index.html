@@ -1200,6 +1200,13 @@ function buildAlertas(){
     const ref = l.ultimoContato || l.dataCriacao;
     return daysBetween(ref, hoje) > 7;
   });
+  // Leads que receberam a mensagem de abertura mas o cliente ainda não respondeu -
+  // sinaliza depois de alguns dias parado pra dar tempo de responder sozinho antes de alertar.
+  const semResposta = leads.filter(l=>{
+    if(l.status!=='Aguardando Retorno') return false;
+    const ref = l.ultimoContato || l.dataCriacao;
+    return daysBetween(ref, hoje) >= 3;
+  });
   const imoveisParados = state.imoveis.filter(i=>{
     if(i.status!=='Disponível') return false;
     return daysBetween(i.dataCriacao||hoje, hoje) >= 30 && (i.visitas||0)===0;
@@ -1207,6 +1214,7 @@ function buildAlertas(){
   const items = [];
   if(compHoje.length) items.push(`📅 Você tem <b>${compHoje.length}</b> compromisso(s) hoje.`);
   if(followups.length) items.push(`⏱ <b>${followups.length}</b> lead(s) sem contato há mais de 7 dias — vale um follow-up.`);
+  if(semResposta.length) items.push(`🔕 <b>${semResposta.length}</b> lead(s) não responderam a mensagem inicial há 3+ dias — considere um novo contato.`);
   if(imoveisParados.length) items.push(`🏠 <b>${imoveisParados.length}</b> imóvel(is) disponível(is) há 30+ dias sem visita.`);
   const mesAtual = new Date().getMonth();
   const aniversariantes = clientes.filter(c=>c.dataNascimento && new Date(c.dataNascimento+'T00:00:00').getMonth()===mesAtual);
@@ -1219,7 +1227,7 @@ function emptyState(title, sub){ return `<div class="empty"><b>${title}</b>${sub
 
 function stamp(status){
   const map = {
-    'Novo':'s-latao','Em Contato':'s-azul','Qualificado':'s-azul','Agendou Visita':'s-azul','Visitou':'s-verde',
+    'Novo':'s-latao','Aguardando Retorno':'s-ink','Em Contato':'s-azul','Qualificado':'s-azul','Agendou Visita':'s-azul','Visitou':'s-verde',
     'Proposta':'s-latao','Negociando':'s-latao','Fechou':'s-verde','Remarketing':'s-azul','Perdido':'s-vermelho',
     'Disponível':'s-verde','Reservado':'s-latao','Vendido':'s-ink','Locado':'s-ink','Em Negociação':'s-azul',
     'Pendente':'s-latao','Concluído':'s-verde','Cancelado':'s-vermelho',
@@ -1240,7 +1248,7 @@ function roletaBadgeHtml(lead){
 /* ============================================================
    LEADS
 ============================================================ */
-const LEAD_STATUSES = ['Novo','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou','Remarketing','Perdido'];
+const LEAD_STATUSES = ['Novo','Aguardando Retorno','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou','Remarketing','Perdido'];
 // Mapeia cada etapa do funil pro campo de data que marca a PRIMEIRA vez que o lead chegou nela.
 // Uma vez marcada, a data nunca é apagada depois (mesmo que o lead avance mais ou volte de
 // status) -- é isso que permite ao relatório de mensuração (CPL, CPQL, CPVA, CPVR, CPP, CAC)
@@ -1260,9 +1268,45 @@ const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','Facebook','OL
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
 const LEAD_FAIXAS_RENDA = ['Até R$ 3.000','R$ 3.001 – R$ 6.000','R$ 6.001 – R$ 10.000','R$ 10.001 – R$ 20.000','Acima de R$ 20.000'];
-// Normaliza nome de cidade (trim + Title Case) pra não espalhar "piracicaba"/"Piracicaba"/"PIRACICABA" como cidades diferentes no painel.
+// Cidades da região com muita variação de grafia/acento/hífen na base (mesmo lugar escrito de
+// jeitos diferentes: "Mogi-Guaçu", "Moji Guaçu", "Mogi Guacu"...) -- mapeia a forma "limpa" (sem
+// acento, minúscula) pra grafia correta, assim tudo cai na MESMA linha no gráfico do Power BI
+// em vez de se espalhar em várias linhas parecidas.
+const CIDADE_ALIASES = {
+  'mogi guacu':'Mogi Guaçu', 'mogi mirim':'Mogi Mirim', 'jaguariuna':'Jaguariúna',
+  'sao paulo':'São Paulo', 'espirito santo do pinhal':'Espírito Santo do Pinhal',
+  'santo andre':'Santo André', 'santo antonio de posse':'Santo Antônio de Posse',
+  'sao joao da boa vista':'São João da Boa Vista', 'pocos de caldas':'Poços de Caldas',
+  'aguas de lindoia':'Águas de Lindóia', 'sao carlos':'São Carlos', 'cosmopolis':'Cosmópolis',
+  'sumare':'Sumaré', 'sao jose do rio preto':'São José do Rio Preto',
+  'mogi das cruzes':'Mogi das Cruzes', 'cordeiropolis':'Cordeirópolis',
+  'ribeirao preto':'Ribeirão Preto', 'sao jose dos campos':'São José dos Campos',
+  'sao bernardo do campo':'São Bernardo do Campo', 'sao caetano do sul':'São Caetano do Sul',
+  'vargem grande do sul':'Vargem Grande do Sul', 'rio de janeiro':'Rio de Janeiro'
+};
+// Tira acentos só pra COMPARAR (nunca pra exibir) -- assim "Mogi Guaçu" e "Mogi Guacu" batem
+// na mesma chave do dicionário acima.
+function semAcento(s){ return String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase(); }
+
+// Normaliza nome de cidade pra não espalhar a mesma cidade em várias linhas no painel: colapsa
+// hífen/underscore/ponto/barra em espaço, tira sufixo de estado colado ("SP", "S.P.", "Estado de
+// São Paulo", "- São Paulo"), corrige a grafia antiga "Moji" -> "Mogi", aplica a lista de cidades
+// conhecidas acima, e cai num Title Case genérico pro resto.
 function tituloCidade(s){
-  return String(s||'').trim().replace(/\s+/g,' ').toLowerCase().replace(/(^|[\s'-])\S/g, c=>c.toUpperCase());
+  let t = String(s||'').trim();
+  if(!t) return t;
+  t = t.replace(/[-_./]+/g,' ').replace(/\s+/g,' ').trim();
+  const semSufixoSp = t.replace(/\s+(s\s*p\.?|estado de s[aã]o paulo)\s*$/i,'').trim();
+  if(semSufixoSp) t = semSufixoSp;
+  if(semAcento(t) !== 'sao paulo'){
+    const semSaoPaulo = t.replace(/\s+s[aã]o paulo\s*$/i,'').trim();
+    if(semSaoPaulo) t = semSaoPaulo;
+  }
+  if(!t) return s.trim();
+  t = t.replace(/\bmoji\b/gi,'Mogi');
+  const alias = CIDADE_ALIASES[semAcento(t)];
+  if(alias) return alias;
+  return t.toLowerCase().replace(/(^|[\s'-])\S/g, c=>c.toUpperCase());
 }
 
 function leadSchema(){
@@ -3418,7 +3462,7 @@ function renderPowerBI(){
   const taxaConv = total ? Math.round(100*fechados/total) : 0;
   const valorPotencial = leads.filter(l=>!['Fechou','Perdido'].includes(l.status)).reduce((s,l)=>s+Number(l.orcamento||0),0);
 
-  const ETAPAS_FUNIL = ['Novo','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
+  const ETAPAS_FUNIL = ['Novo','Aguardando Retorno','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
   const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
 
   // ---- Mensuração de funil (CPL, CPQL, CPVA, CPVR, CPP, CAC) por mês, conforme a estrutura de
@@ -3461,7 +3505,7 @@ function renderPowerBI(){
   ];
 
   const porOrigem = agruparComConversao(leads, l=>l.origem, {limite:7});
-  const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:7});
+  const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:12});
   const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
   const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
   const porCampanha = agruparComConversao(leads, l=>l.campanha, {limite:7});

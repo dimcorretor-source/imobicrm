@@ -424,8 +424,8 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
 
 function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
 function investimentoToRow(inv){ return { id:inv.id, produto_id:inv.produtoId||null, mes:inv.mes, valor:Number(inv.valor||0) }; }
@@ -1068,7 +1068,7 @@ function buildFormFields(schema, data){
     if(f.type==='color'){
       return `<div class="field"><label>${f.label}</label><input type="color" id="ff_${f.key}" value="${val||'#000000'}"></div>`;
     }
-    return `<div class="field"><label>${f.label}</label><input type="${f.type||'text'}" id="ff_${f.key}" value="${val!==undefined?val:''}" ${f.step?`step="${f.step}"`:''}></div>`;
+    return `<div class="field"><label>${f.label}</label><input type="${f.type||'text'}" id="ff_${f.key}" value="${val!==undefined?val:''}" ${f.step?`step="${f.step}"`:''} ${f.placeholder?`placeholder="${f.placeholder}"`:''}></div>`;
   }).join('');
 }
 
@@ -1268,6 +1268,7 @@ const LEAD_ORIGENS = ['Site','Indicação','WhatsApp','Instagram','Facebook','OL
 const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
 const LEAD_FAIXAS_RENDA = ['Até R$ 3.000','R$ 3.001 – R$ 6.000','R$ 6.001 – R$ 10.000','R$ 10.001 – R$ 20.000','Acima de R$ 20.000'];
+const LEAD_FINALIDADES = ['Morar','Investir'];
 // Cidades da região com muita variação de grafia/acento/hífen na base (mesmo lugar escrito de
 // jeitos diferentes: "Mogi-Guaçu", "Moji Guaçu", "Mogi Guacu"...) -- mapeia a forma "limpa" (sem
 // acento, minúscula) pra grafia correta, assim tudo cai na MESMA linha no gráfico do Power BI
@@ -1321,6 +1322,8 @@ function leadSchema(){
     {key:'cidade', label:'Cidade (opcional)'},
     {key:'profissao', label:'Profissão (opcional)', type:'select', options:['(não informado)', ...LEAD_PROFISSOES]},
     {key:'faixaRenda', label:'Faixa de renda (opcional)', type:'select', options:['(não informado)', ...LEAD_FAIXAS_RENDA]},
+    {key:'finalidade', label:'Morar ou investir? (opcional)', type:'select', options:['(não informado)', ...LEAD_FINALIDADES]},
+    {key:'tamanhoLoteDesejado', label:'Tamanho de lote desejado (opcional)', placeholder:'ex.: 300 a 500 m²'},
     {key:'produtoNome', label:'Produto/empreendimento', type:'select', options:['(nenhum)', ...state.produtos.map(p=>p.nome)]},
     {key:'orcamento', label:'Orçamento (R$)', type:'number'},
     {key:'bairrosInteresse', label:'Bairros de interesse'},
@@ -1961,7 +1964,7 @@ function openLeadForm(existing){
   const schema = leadSchema();
   const imAtual = existing && state.imoveis.find(i=>i.id===existing.imovelInteresseId);
   const prodAtual = existing && state.produtos.find(p=>p.id===existing.produtoId);
-  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)', profissao: existing.profissao||'(não informado)', faixaRenda: existing.faixaRenda||'(não informado)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)', profissao:'(não informado)', faixaRenda:'(não informado)'};
+  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)', profissao: existing.profissao||'(não informado)', faixaRenda: existing.faixaRenda||'(não informado)', finalidade: existing.finalidade||'(não informado)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)', profissao:'(não informado)', faixaRenda:'(não informado)', finalidade:'(não informado)'};
   openModal({
     title: existing ? 'Editar lead' : 'Novo lead',
     schema, data,
@@ -1977,6 +1980,7 @@ function openLeadForm(existing){
       const produtoId = prodSel ? prodSel.id : null;
       if(result.profissao==='(não informado)') result.profissao = '';
       if(result.faixaRenda==='(não informado)') result.faixaRenda = '';
+      if(result.finalidade==='(não informado)') result.finalidade = '';
       if(result.cidade) result.cidade = tituloCidade(result.cidade);
       delete result.corretorNome; delete result.imovelCodigo; delete result.produtoNome;
       if(existing){
@@ -2017,6 +2021,8 @@ function openLeadDetail(id){
           <div><b>Cidade:</b> ${lead.cidade||'—'}</div>
           <div><b>Profissão:</b> ${lead.profissao||'—'}</div>
           <div><b>Faixa de renda:</b> ${lead.faixaRenda||'—'}</div>
+          <div><b>Morar ou investir:</b> ${lead.finalidade||'—'}</div>
+          <div><b>Tamanho de lote desejado:</b> ${lead.tamanhoLoteDesejado||'—'}</div>
           <div><b>Orçamento:</b> ${lead.orcamento?fmtMoney(lead.orcamento):'—'}</div>
           <div><b>Bairros:</b> ${lead.bairrosInteresse||'—'}</div>
         </div>
@@ -2158,6 +2164,10 @@ const LEAD_FIELD_ALIASES = {
   cidade: ['cidade','city','municipio'],
   bairrosInteresse: ['bairro','bairros','regiao'],
   tipoImovelDesejado: ['tipoimovel','imoveldesejado'],
+  profissao: ['profissao','ocupacao','occupation'],
+  faixaRenda: ['faixarenda','faixaderenda','rendamensal','renda'],
+  finalidade: ['finalidade','morarouinvestir','objetivo','morarinvestir'],
+  tamanhoLoteDesejado: ['tamanholote','tamanhodolote','metragem','metragemdesejada','areadesejada','m2'],
   observacoes: ['observacao','observacoes','obs','notas','nota']
 };
 // Compara o valor de origem vindo da planilha com as opções fixas do sistema, ignorando
@@ -2169,6 +2179,17 @@ function matchOrigem(v){
   const norm = normalizeHeader(v);
   if(ORIGEM_SIGLAS[norm]) return ORIGEM_SIGLAS[norm];
   return LEAD_ORIGENS.find(o=>normalizeHeader(o)===norm) || null;
+}
+// Igual ao matchOrigem, mas pra "morar ou investir": reconhece variações comuns vindas da
+// planilha ("moradia", "investimento"...) e cai no texto original se não reconhecer nada,
+// pra não perder o dado.
+const FINALIDADE_SIGLAS = { morar:'Morar', moradia:'Morar', morarnolote:'Morar', investir:'Investir', investimento:'Investir' };
+function matchFinalidade(v){
+  if(!v) return '';
+  const norm = normalizeHeader(v);
+  if(FINALIDADE_SIGLAS[norm]) return FINALIDADE_SIGLAS[norm];
+  const achado = LEAD_FINALIDADES.find(o=>normalizeHeader(o)===norm);
+  return achado || String(v).trim();
 }
 function mapRowToLead(row){
   const out = {};
@@ -2271,6 +2292,10 @@ function confirmImportLeads(mapped){
           { const om = matchOrigem(m.origem); if(om) dup.origem = om; }
           if(m.bairrosInteresse) dup.bairrosInteresse = String(m.bairrosInteresse);
           if(m.tipoImovelDesejado) dup.tipoImovelDesejado = String(m.tipoImovelDesejado);
+          if(m.profissao) dup.profissao = String(m.profissao).trim();
+          if(m.faixaRenda) dup.faixaRenda = String(m.faixaRenda).trim();
+          if(m.finalidade) dup.finalidade = matchFinalidade(m.finalidade);
+          if(m.tamanhoLoteDesejado) dup.tamanhoLoteDesejado = String(m.tamanhoLoteDesejado).trim();
           if(m.observacoes) dup.observacoes = (dup.observacoes?dup.observacoes+' | ':'') + String(m.observacoes);
           if(produtoId) dup.produtoId = produtoId;
           if(!outroCorretor || podeTransferir) dup.corretorId = corretorId;
@@ -2286,6 +2311,10 @@ function confirmImportLeads(mapped){
             cidade: m.cidade ? tituloCidade(m.cidade) : '',
             bairrosInteresse: String(m.bairrosInteresse||''),
             tipoImovelDesejado: String(m.tipoImovelDesejado||''),
+            profissao: String(m.profissao||'').trim(),
+            faixaRenda: String(m.faixaRenda||'').trim(),
+            finalidade: matchFinalidade(m.finalidade),
+            tamanhoLoteDesejado: String(m.tamanhoLoteDesejado||'').trim(),
             observacoes: String(m.observacoes||''),
             imovelInteresseId: null, produtoId,
             status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
@@ -3508,6 +3537,8 @@ function renderPowerBI(){
   const porCidade = agruparComConversao(leads, l=>l.cidade, {limite:20});
   const porProfissao = agruparComConversao(leads, l=>l.profissao, {limite:6});
   const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
+  const porFinalidade = agruparComConversao(leads, l=>l.finalidade, {ordem: LEAD_FINALIDADES});
+  const porTamanhoLote = agruparComConversao(leads, l=>l.tamanhoLoteDesejado, {limite:8});
   const porCampanha = agruparComConversao(leads, l=>l.campanha, {limite:7});
   const porCriativo = agruparComConversao(leads, l=>l.criativo, {limite:7});
 
@@ -3611,6 +3642,16 @@ function renderPowerBI(){
     </div>
 
     <div class="pbi-grid2">
+      ${pbiCard('Leads por finalidade (morar ou investir)', 'Quantos leads querem o lote pra morar e quantos pra investir.', pbiBarRows(porFinalidade.map(o=>({label:o.label, value:o.count})), {color:['var(--pbi-teal)','var(--pbi-gold)','var(--pbi-line)']}))}
+      ${pbiCard('Conversão por finalidade', '% de cada finalidade (morar/investir) que já fechou.', pbiBarRows(porFinalidade.map(o=>({label:o.label, value:o.pct})), {color:['var(--pbi-teal)','var(--pbi-gold)','var(--pbi-line)'], max:100, fmt:v=>v+'%'}))}
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por tamanho de lote desejado', 'Metragens mais pedidas pelos leads.', pbiBarRows(porTamanhoLote.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-blue)', fullLabel:true}))}
+      ${pbiCard('Conversão por tamanho de lote desejado', '% de cada faixa de metragem que já fechou.', pbiBarRows(porTamanhoLote.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-blue)', max:100, fmt:v=>v+'%', fullLabel:true}))}
+    </div>
+
+    <div class="pbi-grid2">
       ${pbiCard('Leads por campanha', 'Qual campanha de anúncio está trazendo mais leads.', pbiBarRows(porCampanha.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-teal)', fullLabel:true}))}
       ${pbiCard('Conversão por campanha', '% dos leads de cada campanha que já fecharam.', pbiBarRows(porCampanha.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%', fullLabel:true}))}
     </div>
@@ -3624,7 +3665,7 @@ function renderPowerBI(){
       pbiAreaAcumulada(labelsMes, serieCaptados, serieFechados)
     )}
 
-    <div style="font-size:11px; color:var(--pbi-ink-soft); margin-top:-4px;">💡 Cidade, profissão, faixa de renda, campanha e criativo são preenchidos (opcional) no cadastro do lead ou vêm automaticamente ao importar uma planilha com essas colunas — quanto mais leads tiverem esse dado, mais preciso fica o painel.</div>
+    <div style="font-size:11px; color:var(--pbi-ink-soft); margin-top:-4px;">💡 Cidade, profissão, faixa de renda, finalidade (morar/investir), tamanho de lote desejado, campanha e criativo são preenchidos (opcional) no cadastro do lead ou vêm automaticamente ao importar uma planilha com essas colunas — quanto mais leads tiverem esse dado, mais preciso fica o painel.</div>
   </div>
   `;
 

@@ -1323,7 +1323,7 @@ function leadSchema(){
     {key:'profissao', label:'Profissão (opcional)', type:'select', options:['(não informado)', ...LEAD_PROFISSOES]},
     {key:'faixaRenda', label:'Faixa de renda (opcional)', type:'select', options:['(não informado)', ...LEAD_FAIXAS_RENDA]},
     {key:'finalidade', label:'Morar ou investir? (opcional)', type:'select', options:['(não informado)', ...LEAD_FINALIDADES]},
-    {key:'tamanhoLoteDesejado', label:'Tamanho de lote desejado (opcional)', placeholder:'ex.: 300 a 500 m²'},
+    {key:'tamanhoLoteDesejado', label:'Tamanho (opcional)', placeholder:'ex.: 300 a 500 m²'},
     {key:'produtoNome', label:'Produto/empreendimento', type:'select', options:['(nenhum)', ...state.produtos.map(p=>p.nome)]},
     {key:'orcamento', label:'Orçamento (R$)', type:'number'},
     {key:'bairrosInteresse', label:'Bairros de interesse'},
@@ -2022,7 +2022,7 @@ function openLeadDetail(id){
           <div><b>Profissão:</b> ${lead.profissao||'—'}</div>
           <div><b>Faixa de renda:</b> ${lead.faixaRenda||'—'}</div>
           <div><b>Morar ou investir:</b> ${lead.finalidade||'—'}</div>
-          <div><b>Tamanho de lote desejado:</b> ${lead.tamanhoLoteDesejado||'—'}</div>
+          <div><b>Tamanho:</b> ${lead.tamanhoLoteDesejado||'—'}</div>
           <div><b>Orçamento:</b> ${lead.orcamento?fmtMoney(lead.orcamento):'—'}</div>
           <div><b>Bairros:</b> ${lead.bairrosInteresse||'—'}</div>
         </div>

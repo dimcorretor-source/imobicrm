@@ -2058,6 +2058,7 @@ function openLeadDetail(id){
         <div class="modal-actions">
           ${canManageTeam()?'<button class="btn-danger btn btn-sm" id="delLead">Excluir lead</button>':''}
           ${lead.telefone?'<button class="btn-outline btn btn-sm" id="btnEnviarMsgLead">📨 Enviar mensagem</button>':''}
+          ${lead.telefone?'<button class="btn-outline btn btn-sm" id="btnAbrirWhatsapp">💬 Abrir WhatsApp</button>':''}
           <button class="btn-outline btn btn-sm" id="editLead">Editar dados</button>
           <button class="btn btn-sm" id="saveDetail">Salvar</button>
         </div>
@@ -2069,6 +2070,8 @@ function openLeadDetail(id){
   document.getElementById('editLead').addEventListener('click', ()=>{ closeModal(); openLeadForm(lead); });
   const btnEnviarMsgLead = document.getElementById('btnEnviarMsgLead');
   if(btnEnviarMsgLead) btnEnviarMsgLead.addEventListener('click', ()=>{ closeModal(); openEnviarMensagemLead(lead); });
+  const btnAbrirWhatsapp = document.getElementById('btnAbrirWhatsapp');
+  if(btnAbrirWhatsapp) btnAbrirWhatsapp.addEventListener('click', ()=> abrirWhatsappLead(lead));
   const verImovelBtn = document.getElementById('verImovelLead');
   if(verImovelBtn) verImovelBtn.addEventListener('click', ()=>{ closeModal(); openImovelDetail(lead.imovelInteresseId); });
   const delLeadBtn = document.getElementById('delLead');
@@ -2226,6 +2229,22 @@ function importLeadsFromExcel(file){
 }
 function normalizeTelefone(tel){
   return String(tel||'').replace(/\D/g,'');
+}
+// Monta o número no formato que o link do WhatsApp espera (código do país + DDD + número, só
+// dígitos). Corrige os casos mais comuns de telefone cadastrado sem o "55" na frente ou com um
+// zero sobrando no início, pra o link abrir a conversa certa em vez de dar erro.
+function telefoneParaWhatsapp(tel){
+  let d = normalizeTelefone(tel).replace(/^0+/, '');
+  if(!d) return '';
+  if(d.length === 10 || d.length === 11) d = '55' + d; // faltando o código do país (55)
+  return d;
+}
+// Abre a conversa do WhatsApp com o lead numa aba nova: no computador abre o WhatsApp Web (ou o
+// app instalado, se o navegador estiver configurado pra isso); no celular abre o app direto.
+function abrirWhatsappLead(lead){
+  const numero = telefoneParaWhatsapp(lead.telefone);
+  if(!numero){ alert('Este lead não tem um telefone válido cadastrado.'); return; }
+  window.open('https://wa.me/' + numero, '_blank');
 }
 function encontrarLeadDuplicado(m){
   const telNorm = normalizeTelefone(m.telefone);

@@ -3712,6 +3712,9 @@ function renderPowerBI(){
         <label>até</label>
         <input type="date" id="pbiFiltroDataAte" value="${pbiDataAte}">
       </div>
+      <div class="pbi-field" style="align-self:flex-end;">
+        <button class="btn btn-sm" id="btnExportarFunilCampanha">📥 Baixar Excel do período</button>
+      </div>
     </div>
 
     <div class="pbi-kpis">
@@ -3785,11 +3788,8 @@ function renderPowerBI(){
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
         <div>
           <div class="pbi-card-title">Funil por campanha (planilha)</div>
-          <div class="pbi-card-sub" style="margin-bottom:0;">Baixe um Excel cruzando cada campanha com quantos leads viraram contato, qualificação, visita, proposta e venda — pra medir qual campanha está dando retorno de verdade. Usa o mesmo filtro de Produto/Corretor/Período lá em cima (defina o período no "de" / "até" ali pra baixar só uma data específica).</div>
+          <div class="pbi-card-sub" style="margin-bottom:0;">O Excel cruza cada campanha com quantos leads viraram contato, qualificação, visita, proposta e venda — pra medir qual campanha está dando retorno de verdade. Use o botão "📥 Baixar Excel do período" ali no topo, ao lado do filtro de Produto/Corretor/Período (defina o "de"/"até" pra baixar só uma data específica, ou deixe em branco pra baixar tudo).</div>
         </div>
-      </div>
-      <div style="display:flex; align-items:flex-end; flex-wrap:wrap; gap:14px; margin-top:14px;">
-        <button class="btn btn-sm" id="btnExportarFunilCampanha" style="margin-bottom:1px;">📥 Baixar Excel</button>
       </div>
     </div>
 

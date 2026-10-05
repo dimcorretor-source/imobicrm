@@ -3525,7 +3525,8 @@ function renderRelatorios(){
 ============================================================ */
 let pbiProdutoFilter = 'Todos';
 let pbiCorretorFilter = 'Todos';
-let pbiPeriodoFilter = 'Todos'; // 'Todos' | '30d' | '90d' | 'ano'
+let pbiDataDe = ''; // 'YYYY-MM-DD' ou vazio (filtro de período aberto, por data real do lead)
+let pbiDataAte = ''; // 'YYYY-MM-DD' ou vazio
 let pbiMesMensuracao = mesAtualISO(); // mês (YYYY-MM) usado só pelo card de Mensuração de funil
 
 function pbiBarRows(items, opts){
@@ -3603,11 +3604,11 @@ function renderPowerBI(){
     const u = state.usuarios.find(x=>x.nome===pbiCorretorFilter);
     leads = leads.filter(l=>u && l.corretorId===u.id);
   }
-  if(pbiPeriodoFilter !== 'Todos'){
-    const hoje0 = new Date();
-    const dias = pbiPeriodoFilter==='30d' ? 30 : pbiPeriodoFilter==='90d' ? 90 : 365;
-    const limite = new Date(hoje0.getTime() - dias*86400000).toISOString().slice(0,10);
-    leads = leads.filter(l=>l.dataCriacao && l.dataCriacao >= limite);
+  if(pbiDataDe){
+    leads = leads.filter(l=>l.dataCriacao && l.dataCriacao >= pbiDataDe);
+  }
+  if(pbiDataAte){
+    leads = leads.filter(l=>l.dataCriacao && l.dataCriacao <= pbiDataAte);
   }
 
   const total = leads.length;
@@ -3704,13 +3705,12 @@ function renderPowerBI(){
         </select>
       </div>` : ''}
       <div class="pbi-field">
-        <label>Período</label>
-        <select id="pbiFiltroPeriodo">
-          <option value="Todos" ${pbiPeriodoFilter==='Todos'?'selected':''}>Desde o início</option>
-          <option value="30d" ${pbiPeriodoFilter==='30d'?'selected':''}>Últimos 30 dias</option>
-          <option value="90d" ${pbiPeriodoFilter==='90d'?'selected':''}>Últimos 90 dias</option>
-          <option value="ano" ${pbiPeriodoFilter==='ano'?'selected':''}>Últimos 12 meses</option>
-        </select>
+        <label>Período - de</label>
+        <input type="date" id="pbiFiltroDataDe" value="${pbiDataDe}">
+      </div>
+      <div class="pbi-field">
+        <label>até</label>
+        <input type="date" id="pbiFiltroDataAte" value="${pbiDataAte}">
       </div>
     </div>
 
@@ -3785,22 +3785,10 @@ function renderPowerBI(){
       <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
         <div>
           <div class="pbi-card-title">Funil por campanha (planilha)</div>
-          <div class="pbi-card-sub" style="margin-bottom:0;">Baixe um Excel cruzando cada campanha com quantos leads viraram contato, qualificação, visita, proposta e venda — pra medir qual campanha está dando retorno de verdade. Escolha um mês específico ou um período personalizado, ou deixe em branco pra baixar tudo (respeitando o filtro de Período lá em cima).</div>
+          <div class="pbi-card-sub" style="margin-bottom:0;">Baixe um Excel cruzando cada campanha com quantos leads viraram contato, qualificação, visita, proposta e venda — pra medir qual campanha está dando retorno de verdade. Usa o mesmo filtro de Produto/Corretor/Período lá em cima (defina o período no "de" / "até" ali pra baixar só uma data específica).</div>
         </div>
       </div>
       <div style="display:flex; align-items:flex-end; flex-wrap:wrap; gap:14px; margin-top:14px;">
-        <div class="pbi-field" style="margin-bottom:0;">
-          <label>Mês específico (opcional)</label>
-          <input type="month" id="exportFunilMes">
-        </div>
-        <div class="pbi-field" style="margin-bottom:0;">
-          <label>Ou de (opcional)</label>
-          <input type="date" id="exportFunilDe">
-        </div>
-        <div class="pbi-field" style="margin-bottom:0;">
-          <label>Até (opcional)</label>
-          <input type="date" id="exportFunilAte">
-        </div>
         <button class="btn btn-sm" id="btnExportarFunilCampanha" style="margin-bottom:1px;">📥 Baixar Excel</button>
       </div>
     </div>
@@ -3822,28 +3810,17 @@ function renderPowerBI(){
   if(selProd) selProd.addEventListener('change', ()=>{ pbiProdutoFilter = selProd.value; renderPowerBI(); });
   const selCorr = document.getElementById('pbiFiltroCorretor');
   if(selCorr) selCorr.addEventListener('change', ()=>{ pbiCorretorFilter = selCorr.value; renderPowerBI(); });
-  const selPer = document.getElementById('pbiFiltroPeriodo');
-  if(selPer) selPer.addEventListener('change', ()=>{ pbiPeriodoFilter = selPer.value; renderPowerBI(); });
+  const inpDataDe = document.getElementById('pbiFiltroDataDe');
+  if(inpDataDe) inpDataDe.addEventListener('change', ()=>{ pbiDataDe = inpDataDe.value; renderPowerBI(); });
+  const inpDataAte = document.getElementById('pbiFiltroDataAte');
+  if(inpDataAte) inpDataAte.addEventListener('change', ()=>{ pbiDataAte = inpDataAte.value; renderPowerBI(); });
   const selMes = document.getElementById('pbiFiltroMes');
   if(selMes) selMes.addEventListener('change', ()=>{ pbiMesMensuracao = selMes.value || mesAtualISO(); renderPowerBI(); });
   const btnExportarFunil = document.getElementById('btnExportarFunilCampanha');
   if(btnExportarFunil) btnExportarFunil.addEventListener('click', ()=>{
-    const mes = document.getElementById('exportFunilMes').value; // 'YYYY-MM' ou vazio
-    const de = document.getElementById('exportFunilDe').value;   // 'YYYY-MM-DD' ou vazio
-    const ate = document.getElementById('exportFunilAte').value; // 'YYYY-MM-DD' ou vazio
-    let leadsExport = leads;
-    let rotulo = 'todos-os-leads';
-    if(mes){
-      // Mês específico tem prioridade sobre "de/até" se os dois forem preenchidos por engano
-      leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao.slice(0,7) === mes);
-      rotulo = mes;
-    }else if(de || ate){
-      if(de) leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao >= de);
-      if(ate) leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao <= ate);
-      rotulo = `${de||'inicio'}_a_${ate||'hoje'}`;
-    }
-    if(!leadsExport.length){ alert('Nenhum lead encontrado nesse período (considerando também os filtros de Produto/Corretor/Período lá em cima, se houver).'); return; }
-    exportarFunilPorCampanha(leadsExport, rotulo);
+    if(!leads.length){ alert('Nenhum lead encontrado nesse período (considerando também os filtros de Produto/Corretor/Período lá em cima, se houver).'); return; }
+    const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
+    exportarFunilPorCampanha(leads, rotulo);
   });
 }
 

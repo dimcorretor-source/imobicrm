@@ -3363,6 +3363,86 @@ function agruparComConversao(leads, keyFn, opts){
   return arr.map(a=>({label:a.label, count:a.total, pct: a.total ? Math.round(100*a.fechou/a.total) : 0}));
 }
 
+// Gera e baixa uma planilha Excel cruzando campanha x etapa do funil, pra responder "qual
+// campanha está dando retorno" -- quantos leads de cada campanha viraram contato, qualificação,
+// visita, proposta e venda. Usa as mesmas datas de primeira-vez-que-chegou-na-etapa já gravadas
+// em cada lead (data_qualificado, data_visita_agendada etc.), então conta o histórico de vida do
+// lead inteiro, não só o status de hoje -- um lead que foi qualificado e depois virou Perdido
+// continua contando como "qualificado" aqui.
+function exportarFunilPorCampanha(leads, rotuloPeriodo){
+  if(typeof XLSX === 'undefined'){
+    alert('Não foi possível carregar o gerador de planilha (é preciso estar conectado à internet na primeira vez que abrir o sistema).');
+    return;
+  }
+  const porCampanha = {};
+  leads.forEach(l=>{
+    const campanha = String(l.campanha||'').trim() || 'Sem campanha';
+    if(!porCampanha[campanha]) porCampanha[campanha] = {
+      total:0, contatados:0, qualificados:0, visitaAgendada:0, visitaRealizada:0, propostas:0, fechados:0, perdidos:0
+    };
+    const g = porCampanha[campanha];
+    g.total++;
+    if(!['Novo','Aguardando Retorno'].includes(l.status)) g.contatados++;
+    if(l.dataQualificado) g.qualificados++;
+    if(l.dataVisitaAgendada) g.visitaAgendada++;
+    if(l.dataVisitaRealizada) g.visitaRealizada++;
+    if(l.dataProposta) g.propostas++;
+    if(l.status==='Fechou') g.fechados++;
+    if(l.status==='Perdido') g.perdidos++;
+  });
+  const pct = (n, base) => base ? Math.round(1000*n/base)/10 : 0;
+  const linhas = Object.entries(porCampanha)
+    .map(([campanha, g])=>({
+      'Campanha': campanha,
+      'Total de leads': g.total,
+      'Em contato': g.contatados,
+      '% em contato': pct(g.contatados, g.total),
+      'Qualificados': g.qualificados,
+      '% qualificação': pct(g.qualificados, g.total),
+      'Visita agendada': g.visitaAgendada,
+      '% visita agendada': pct(g.visitaAgendada, g.total),
+      'Visita realizada': g.visitaRealizada,
+      '% visita realizada': pct(g.visitaRealizada, g.total),
+      'Propostas': g.propostas,
+      '% proposta': pct(g.propostas, g.total),
+      'Fechados (vendas)': g.fechados,
+      '% conversão (lead→venda)': pct(g.fechados, g.total),
+      'Perdidos': g.perdidos
+    }))
+    .sort((a,b)=> b['Total de leads'] - a['Total de leads']);
+  // Linha de total geral no rodapé, pra ter o panorama consolidado junto com o detalhe por campanha
+  const totalGeral = Object.values(porCampanha).reduce((acc,g)=>{
+    Object.keys(g).forEach(k=> acc[k]=(acc[k]||0)+g[k]);
+    return acc;
+  }, {});
+  linhas.push({
+    'Campanha': 'TOTAL GERAL',
+    'Total de leads': totalGeral.total||0,
+    'Em contato': totalGeral.contatados||0,
+    '% em contato': pct(totalGeral.contatados, totalGeral.total),
+    'Qualificados': totalGeral.qualificados||0,
+    '% qualificação': pct(totalGeral.qualificados, totalGeral.total),
+    'Visita agendada': totalGeral.visitaAgendada||0,
+    '% visita agendada': pct(totalGeral.visitaAgendada, totalGeral.total),
+    'Visita realizada': totalGeral.visitaRealizada||0,
+    '% visita realizada': pct(totalGeral.visitaRealizada, totalGeral.total),
+    'Propostas': totalGeral.propostas||0,
+    '% proposta': pct(totalGeral.propostas, totalGeral.total),
+    'Fechados (vendas)': totalGeral.fechados||0,
+    '% conversão (lead→venda)': pct(totalGeral.fechados, totalGeral.total),
+    'Perdidos': totalGeral.perdidos||0
+  });
+  const ws = XLSX.utils.json_to_sheet(linhas);
+  ws['!cols'] = [
+    {wch:32},{wch:13},{wch:11},{wch:12},{wch:12},{wch:13},{wch:15},{wch:16},{wch:16},{wch:17},
+    {wch:11},{wch:11},{wch:16},{wch:20},{wch:10}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Funil por campanha');
+  const sufixo = rotuloPeriodo || todayISO();
+  XLSX.writeFile(wb, `funil-por-campanha-${sufixo}.xlsx`);
+}
+
 /* ============================================================
    RELATÓRIOS
 ============================================================ */
@@ -3675,6 +3755,30 @@ function renderPowerBI(){
       ${pbiCard('Conversão por campanha', '% dos leads de cada campanha que já fecharam.', pbiBarRows(porCampanha.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%', fullLabel:true}))}
     </div>
 
+    <div class="pbi-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
+        <div>
+          <div class="pbi-card-title">Funil por campanha (planilha)</div>
+          <div class="pbi-card-sub" style="margin-bottom:0;">Baixe um Excel cruzando cada campanha com quantos leads viraram contato, qualificação, visita, proposta e venda — pra medir qual campanha está dando retorno de verdade. Escolha um mês específico ou um período personalizado, ou deixe em branco pra baixar tudo (respeitando o filtro de Período lá em cima).</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:flex-end; flex-wrap:wrap; gap:14px; margin-top:14px;">
+        <div class="pbi-field" style="margin-bottom:0;">
+          <label>Mês específico (opcional)</label>
+          <input type="month" id="exportFunilMes">
+        </div>
+        <div class="pbi-field" style="margin-bottom:0;">
+          <label>Ou de (opcional)</label>
+          <input type="date" id="exportFunilDe">
+        </div>
+        <div class="pbi-field" style="margin-bottom:0;">
+          <label>Até (opcional)</label>
+          <input type="date" id="exportFunilAte">
+        </div>
+        <button class="btn btn-sm" id="btnExportarFunilCampanha" style="margin-bottom:1px;">📥 Baixar Excel</button>
+      </div>
+    </div>
+
     <div class="pbi-grid2">
       ${pbiCard('Leads por criativo', 'Qual anúncio/criativo específico está trazendo mais leads (o criativo pode ser pausado, a campanha continua existindo).', pbiBarRows(porCriativo.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-red)', fullLabel:true}))}
       ${pbiCard('Conversão por criativo', '% dos leads de cada criativo que já fecharam.', pbiBarRows(porCriativo.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-red)', max:100, fmt:v=>v+'%', fullLabel:true}))}
@@ -3696,6 +3800,25 @@ function renderPowerBI(){
   if(selPer) selPer.addEventListener('change', ()=>{ pbiPeriodoFilter = selPer.value; renderPowerBI(); });
   const selMes = document.getElementById('pbiFiltroMes');
   if(selMes) selMes.addEventListener('change', ()=>{ pbiMesMensuracao = selMes.value || mesAtualISO(); renderPowerBI(); });
+  const btnExportarFunil = document.getElementById('btnExportarFunilCampanha');
+  if(btnExportarFunil) btnExportarFunil.addEventListener('click', ()=>{
+    const mes = document.getElementById('exportFunilMes').value; // 'YYYY-MM' ou vazio
+    const de = document.getElementById('exportFunilDe').value;   // 'YYYY-MM-DD' ou vazio
+    const ate = document.getElementById('exportFunilAte').value; // 'YYYY-MM-DD' ou vazio
+    let leadsExport = leads;
+    let rotulo = 'todos-os-leads';
+    if(mes){
+      // Mês específico tem prioridade sobre "de/até" se os dois forem preenchidos por engano
+      leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao.slice(0,7) === mes);
+      rotulo = mes;
+    }else if(de || ate){
+      if(de) leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao >= de);
+      if(ate) leadsExport = leadsExport.filter(l=> l.dataCriacao && l.dataCriacao <= ate);
+      rotulo = `${de||'inicio'}_a_${ate||'hoje'}`;
+    }
+    if(!leadsExport.length){ alert('Nenhum lead encontrado nesse período (considerando também os filtros de Produto/Corretor/Período lá em cima, se houver).'); return; }
+    exportarFunilPorCampanha(leadsExport, rotulo);
+  });
 }
 
 /* ============================================================

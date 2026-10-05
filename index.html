@@ -2155,7 +2155,32 @@ function openFecharLeadFlow(lead, after){
 function normalizeHeader(h){
   return String(h||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,'');
 }
+// Converte a data de criação do lead vinda da planilha (geralmente a data real em que o lead
+// respondeu o anúncio) pro formato ISO usado internamente. Datas do Excel/Google Sheets chegam
+// de duas formas: um número de série (quando a célula está formatada como data) ou um texto tipo
+// "9/24/26" -- esse segundo formato é o que os exports de anúncio (Meta/Facebook) normalmente
+// usam, sempre no padrão mês/dia/ano (americano), mesmo pra contas brasileiras.
+function parseDataLead(v){
+  if(v === undefined || v === null || v === '') return '';
+  if(typeof v === 'number' && isFinite(v)){
+    const ms = Math.round((v - 25569) * 86400 * 1000); // 25569 = dias entre 1899-12-30 e 1970-01-01
+    const d = new Date(ms);
+    return isNaN(d.getTime()) ? '' : d.toISOString().slice(0,10);
+  }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return `${m[1]}-${m[2]}-${m[3]}`;
+  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if(m){
+    let [, mes, dia, ano] = m;
+    if(ano.length === 2) ano = (Number(ano) < 70 ? '20' : '19') + ano;
+    mes = mes.padStart(2,'0'); dia = dia.padStart(2,'0');
+    return `${ano}-${mes}-${dia}`;
+  }
+  return '';
+}
 const LEAD_FIELD_ALIASES = {
+  dataLead: ['data','dataderegistro','datadocadastro','datadoanuncio','datadaresposta','createdtime'],
   nome: ['nome','name','cliente'],
   telefone: ['telefone','fone','celular','whatsapp','phone','contato'],
   email: ['email'],
@@ -2315,6 +2340,7 @@ function confirmImportLeads(mapped){
           if(m.faixaRenda) dup.faixaRenda = String(m.faixaRenda).trim();
           if(m.finalidade) dup.finalidade = matchFinalidade(m.finalidade);
           if(m.tamanhoLoteDesejado) dup.tamanhoLoteDesejado = String(m.tamanhoLoteDesejado).trim();
+          if(m.dataLead){ const dReal = parseDataLead(m.dataLead); if(dReal) dup.dataCriacao = dReal; }
           if(m.observacoes) dup.observacoes = (dup.observacoes?dup.observacoes+' | ':'') + String(m.observacoes);
           if(produtoId) dup.produtoId = produtoId;
           if(!outroCorretor || podeTransferir) dup.corretorId = corretorId;
@@ -2336,7 +2362,7 @@ function confirmImportLeads(mapped){
             tamanhoLoteDesejado: String(m.tamanhoLoteDesejado||'').trim(),
             observacoes: String(m.observacoes||''),
             imovelInteresseId: null, produtoId,
-            status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
+            status:'Novo', dataCriacao: (m.dataLead && parseDataLead(m.dataLead)) || todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
           });
           criados++;
         }

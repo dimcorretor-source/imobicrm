@@ -424,7 +424,7 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null }; }
 function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
 
 function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
@@ -520,7 +520,7 @@ async function syncTable(table, rows, mapFn){
 async function absorverAtividadeDoBot(){
   if(!state.leads.length) return;
   try{
-    const freshLeads = await fetchAllRows('leads', 'id,status,interacoes,ultimo_contato');
+    const freshLeads = await fetchAllRows('leads', 'id,status,interacoes,ultimo_contato,pontuacao_ia,pontuacao_detalhe,ficha_ia,objecao_principal,analise_resumo,analise_proximo_passo,analise_mensagem_sugerida,analise_coach,analise_atualizado_em');
     if(!freshLeads.length) return;
     const freshById = {};
     freshLeads.forEach(f=>{ freshById[f.id] = f; });
@@ -533,6 +533,21 @@ async function absorverAtividadeDoBot(){
         l.interacoes = interacoesServidor;
         l.status = f.status;
         l.ultimoContato = f.ultimo_contato;
+      }
+      /* Campos de análise da IA (nota, ficha, coach etc.) também são escritos de forma
+         assíncrona pelo bot do WhatsApp, fora do fluxo normal do app — por isso não entram
+         em leadToRow() e precisam ser absorvidos aqui, do mesmo jeito que interacoes/status,
+         sempre que o servidor tiver uma análise mais recente que a cópia local. */
+      if(f.analise_atualizado_em && f.analise_atualizado_em !== l.analiseAtualizadoEm){
+        l.pontuacaoIa = f.pontuacao_ia;
+        l.pontuacaoDetalhe = f.pontuacao_detalhe||[];
+        l.fichaIa = f.ficha_ia||null;
+        l.objecaoPrincipal = f.objecao_principal||null;
+        l.analiseResumo = f.analise_resumo||null;
+        l.analiseProximoPasso = f.analise_proximo_passo||null;
+        l.analiseMensagemSugerida = f.analise_mensagem_sugerida||null;
+        l.analiseCoach = f.analise_coach||null;
+        l.analiseAtualizadoEm = f.analise_atualizado_em;
       }
     });
   }catch(e){ console.error('Erro ao verificar atividade do bot antes de sincronizar leads', e); }
@@ -1243,6 +1258,13 @@ function roletaBadgeHtml(lead){
   if(restanteMin <= 0) return `<span class="stamp s-vermelho" title="Prazo estourado, será reatribuído">⟲ reatribuindo…</span>`;
   return `<span class="stamp ${restanteMin<=5?'s-vermelho':'s-azul'}" title="Tempo para atender antes de passar para o próximo da roleta">⟲ ${restanteMin} min</span>`;
 }
+function scoreBadgeHtml(lead){
+  if(lead.pontuacaoIa===null || lead.pontuacaoIa===undefined) return '';
+  const n = Number(lead.pontuacaoIa);
+  const cor = n>=70 ? 's-verde' : (n>=40 ? 's-latao' : 's-vermelho');
+  const motivos = Array.isArray(lead.pontuacaoDetalhe) ? lead.pontuacaoDetalhe.map(m=>`${m.motivo}: ${m.pontos>0?'+':''}${m.pontos}`).join(' | ') : '';
+  return `<span class="stamp ${cor}" title="Nota da IA com base no histórico de conversa${motivos?'\n'+motivos:''}">★ ${n}</span>`;
+}
 
 
 /* ============================================================
@@ -1466,7 +1488,7 @@ function renderLeadBody(){
         ${pool.filter(l=>l.status===s).map(l=>`
           <div class="kcard ${leadSelectMode && leadSelected.has(l.id)?'selected':''}" draggable="true" data-id="${l.id}">
             ${leadSelectMode?`<input type="checkbox" class="kcard-check" data-id="${l.id}" ${leadSelected.has(l.id)?'checked':''}>`:''}
-            <b>${l.nome}</b>${l.origem} · ${l.tipo}${l.orcamento?`<br>${fmtMoney(l.orcamento)}`:''}${isGestor()?`<br><span style="color:var(--ink-soft);">${corretorNome(l.corretorId)}</span>`:''}
+            <b>${l.nome} ${scoreBadgeHtml(l)}</b>${l.origem} · ${l.tipo}${l.orcamento?`<br>${fmtMoney(l.orcamento)}`:''}${isGestor()?`<br><span style="color:var(--ink-soft);">${corretorNome(l.corretorId)}</span>`:''}
           </div>
         `).join('')}
       </div>`).join('')}</div>`;
@@ -1488,7 +1510,7 @@ function renderLeadBody(){
       return `
       <tr>
         ${leadSelectMode?`<td><input type="checkbox" class="lead-select" data-id="${l.id}" ${leadSelected.has(l.id)?'checked':''} style="width:18px; height:18px; cursor:pointer;"></td>`:''}
-        <td><a href="#" class="lead-open" data-id="${l.id}" style="color:var(--ink); font-weight:600; text-decoration:none;">${l.nome}</a> ${roletaBadgeHtml(l)}</td>
+        <td><a href="#" class="lead-open" data-id="${l.id}" style="color:var(--ink); font-weight:600; text-decoration:none;">${l.nome}</a> ${roletaBadgeHtml(l)} ${scoreBadgeHtml(l)}</td>
         <td class="mono">${l.telefone||'—'}</td>
         <td>${l.origem}</td>
         <td>${l.tipo}</td>
@@ -1797,6 +1819,68 @@ async function sugerirMensagemIndividualComIA(lead, botao){
   }
 }
 
+// Pede pro bot analisar a conversa inteira desse lead no WhatsApp e devolver nota, ficha
+// preenchida pela IA, objeção principal, resumo, próximo passo, mensagem sugerida e coach do
+// gestor. É o mesmo padrão de fila/polling de sugerirMensagemIndividualComIA, mas quem grava o
+// resultado é o bot direto nas colunas de leads (não a tela) — por isso, ao terminar, a gente
+// não usa "resultado" da fila, e sim rebusca o próprio lead atualizado do Supabase.
+async function analisarLeadComIA(lead, botao){
+  if(!sb){ alert('Sem conexão com o servidor agora.'); return; }
+  const produto = state.produtos.find(p=>p.id===lead.produtoId);
+  const contexto = (lead.interacoes||[]).slice(-20).map(i=>`- (${fmtDate(i.data)||'?'}) ${i.descricao}`).join('\n');
+
+  const textoOriginal = botao.textContent;
+  botao.textContent = 'Analisando...';
+  botao.disabled = true;
+  try{
+    const { data: userData } = await sb.auth.getUser();
+    const { data: inserido, error } = await sb.from('ia_geracao_fila').insert([{
+      tipo: 'analise_lead',
+      entrada: { leadId: lead.id, nomeLead: lead.nome, produto: produto ? produto.nome : null, contexto },
+      status: 'pendente',
+      criado_por: userData?.user?.id || null
+    }]).select('id').single();
+    if(error || !inserido){ alert('Erro ao pedir análise: ' + (error?.message||'tente novamente.')); return; }
+
+    const id = inserido.id;
+    const tentativas = 20; // ~1.5s * 20 = ~30s de espera máxima
+    for(let i=0; i<tentativas; i++){
+      await new Promise(res=>setTimeout(res, 1500));
+      const { data: item } = await sb.from('ia_geracao_fila').select('status, erro_msg').eq('id', id).single();
+      if(!item) continue;
+      if(item.status==='pronto'){
+        const { data: freshLead } = await sb.from('leads').select('pontuacao_ia,pontuacao_detalhe,ficha_ia,objecao_principal,analise_resumo,analise_proximo_passo,analise_mensagem_sugerida,analise_coach,analise_atualizado_em').eq('id', lead.id).single();
+        if(freshLead){
+          lead.pontuacaoIa = freshLead.pontuacao_ia;
+          lead.pontuacaoDetalhe = freshLead.pontuacao_detalhe||[];
+          lead.fichaIa = freshLead.ficha_ia||null;
+          lead.objecaoPrincipal = freshLead.objecao_principal||null;
+          lead.analiseResumo = freshLead.analise_resumo||null;
+          lead.analiseProximoPasso = freshLead.analise_proximo_passo||null;
+          lead.analiseMensagemSugerida = freshLead.analise_mensagem_sugerida||null;
+          lead.analiseCoach = freshLead.analise_coach||null;
+          lead.analiseAtualizadoEm = freshLead.analise_atualizado_em||null;
+          try{ localStorage.setItem('imobicrm_cache_v1', JSON.stringify(state)); }catch(e){}
+        }
+        openLeadDetail(lead.id);
+        renderLeads();
+        return;
+      }
+      if(item.status==='erro'){
+        alert('A IA não conseguiu analisar a conversa: ' + (item.erro_msg||'erro desconhecido') + '.');
+        return;
+      }
+    }
+    alert('A análise demorou demais e foi cancelada. Tente de novo em alguns instantes.');
+  }catch(err){
+    console.error(err);
+    alert('Erro ao pedir análise da IA.');
+  }finally{
+    botao.textContent = textoOriginal;
+    botao.disabled = false;
+  }
+}
+
 async function sendRemarketingWhatsapp(ids, mensagem, fotoDataUrl){
   const leadsAlvo = state.leads.filter(l=>ids.includes(l.id));
   const semTelefone = leadsAlvo.filter(l=>!l.telefone);
@@ -2007,7 +2091,7 @@ function openLeadDetail(id){
       <div class="modal">
         <button class="btn-sm btn-outline modal-close" id="closeDetail">Fechar</button>
         <h3>${lead.nome}</h3>
-        <div style="margin-bottom:6px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
+        <div style="margin-bottom:6px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} ${scoreBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
         <div style="margin-bottom:14px; font-size:11px; color:var(--ink-soft);">
           ${[['Qualificado',lead.dataQualificado],['Visita agendada',lead.dataVisitaAgendada],['Visita realizada',lead.dataVisitaRealizada],['Proposta',lead.dataProposta],['Venda',lead.dataVenda]].filter(([,d])=>d).map(([label,d])=>`✓ ${label}: ${fmtDate(d)}`).join('   ')}
         </div>
@@ -2029,6 +2113,23 @@ function openLeadDetail(id){
         ${(()=>{ const p = state.produtos.find(x=>x.id===lead.produtoId); return p ? `<div style="margin-bottom:10px;"><span class="stamp s-azul">📦 ${p.nome}</span></div>` : ''; })()}
         ${(()=>{ const im = state.imoveis.find(i=>i.id===lead.imovelInteresseId); return im ? `<div class="card" style="margin-bottom:14px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between;"><span style="font-size:13px;">🏠 Interesse no lote <b>${im.codigo}</b></span><button class="btn-sm btn-outline" id="verImovelLead">Ver lote</button></div>` : ''; })()}
         ${lead.observacoes?`<p style="font-size:13px; color:var(--ink-soft);">${lead.observacoes}</p>`:''}
+
+        <div class="card" style="margin-bottom:16px; padding:12px 14px; border-color:var(--azul);">
+          <label style="font-size:11px; font-weight:600; color:var(--azul); text-transform:uppercase; display:block; margin-bottom:8px;">🤖 Análise da IA</label>
+          ${(lead.pontuacaoIa===null || lead.pontuacaoIa===undefined) ?
+            `<p style="font-size:12.5px; color:var(--ink-soft); margin:0;">Ainda sem análise. Clique em "Analisar com IA" para ler o histórico de conversa no WhatsApp e gerar nota, ficha, resumo e sugestões.</p>` :
+            `<div style="font-size:12.5px;">
+              <div style="margin-bottom:8px;">${scoreBadgeHtml(lead)} ${Array.isArray(lead.pontuacaoDetalhe)&&lead.pontuacaoDetalhe.length?`<span style="color:var(--ink-soft);">${lead.pontuacaoDetalhe.map(m=>`${m.motivo} (${m.pontos>0?'+':''}${m.pontos})`).join(' · ')}</span>`:''}</div>
+              ${lead.objecaoPrincipal?`<div style="margin-bottom:6px;"><b>Objeção principal:</b> ${lead.objecaoPrincipal}</div>`:''}
+              ${lead.analiseResumo?`<div style="margin-bottom:6px;"><b>Resumo:</b> ${lead.analiseResumo}</div>`:''}
+              ${lead.analiseProximoPasso?`<div style="margin-bottom:6px;"><b>Próximo passo sugerido:</b> ${lead.analiseProximoPasso}</div>`:''}
+              ${lead.analiseMensagemSugerida?`<div style="margin-bottom:6px;"><b>Mensagem sugerida:</b> ${lead.analiseMensagemSugerida}</div>`:''}
+              ${lead.fichaIa ? `<div style="margin-bottom:6px;"><b>Ficha preenchida pela IA:</b> ${[['Quartos',lead.fichaIa.quartos],['Localização preferida',lead.fichaIa.localizacaoPreferida],['Forma de pagamento',lead.fichaIa.formaPagamento],['Renda familiar declarada',lead.fichaIa.rendaFamiliarDeclarada],['Composição familiar',lead.fichaIa.composicaoFamiliar]].filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join(' · ') || '—'}${lead.fichaIa.observacoes?` — ${lead.fichaIa.observacoes}`:''}</div>` : ''}
+              ${lead.analiseCoach ? `<div style="margin-bottom:0;"><b>Coach do gestor:</b> ${(lead.analiseCoach.pontosFortes||[]).length?`<div>👍 ${(lead.analiseCoach.pontosFortes||[]).join(' · ')}</div>`:''}${(lead.analiseCoach.pontosMelhorar||[]).length?`<div>📌 ${(lead.analiseCoach.pontosMelhorar||[]).join(' · ')}</div>`:''}</div>` : ''}
+              <div style="margin-top:8px; font-size:10.5px; color:var(--ink-soft);">Atualizado em ${fmtDate(lead.analiseAtualizadoEm)}</div>
+            </div>`
+          }
+        </div>
 
         <div class="field">
           <label>Mudar status</label>
@@ -2059,6 +2160,7 @@ function openLeadDetail(id){
           ${canManageTeam()?'<button class="btn-danger btn btn-sm" id="delLead">Excluir lead</button>':''}
           ${lead.telefone?'<button class="btn-outline btn btn-sm" id="btnEnviarMsgLead">📨 Enviar mensagem</button>':''}
           ${lead.telefone?'<button class="btn-outline btn btn-sm" id="btnAbrirWhatsapp">💬 Abrir WhatsApp</button>':''}
+          ${lead.telefone?'<button class="btn-outline btn btn-sm" id="btnAnalisarIA">🤖 Analisar com IA</button>':''}
           <button class="btn-outline btn btn-sm" id="editLead">Editar dados</button>
           <button class="btn btn-sm" id="saveDetail">Salvar</button>
         </div>
@@ -2072,6 +2174,8 @@ function openLeadDetail(id){
   if(btnEnviarMsgLead) btnEnviarMsgLead.addEventListener('click', ()=>{ closeModal(); openEnviarMensagemLead(lead); });
   const btnAbrirWhatsapp = document.getElementById('btnAbrirWhatsapp');
   if(btnAbrirWhatsapp) btnAbrirWhatsapp.addEventListener('click', ()=> abrirWhatsappLead(lead));
+  const btnAnalisarIA = document.getElementById('btnAnalisarIA');
+  if(btnAnalisarIA) btnAnalisarIA.addEventListener('click', e=> analisarLeadComIA(lead, e.target));
   const verImovelBtn = document.getElementById('verImovelLead');
   if(verImovelBtn) verImovelBtn.addEventListener('click', ()=>{ closeModal(); openImovelDetail(lead.imovelInteresseId); });
   const delLeadBtn = document.getElementById('delLead');
@@ -3395,7 +3499,7 @@ function agruparComConversao(leads, keyFn, opts){
 // em cada lead (data_qualificado, data_visita_agendada etc.), então conta o histórico de vida do
 // lead inteiro, não só o status de hoje -- um lead que foi qualificado e depois virou Perdido
 // continua contando como "qualificado" aqui.
-function exportarFunilPorCampanha(leads, rotuloPeriodo){
+function exportarFunilPorCampanha(leads, rotuloPeriodo, periodoLabel){
   if(typeof XLSX === 'undefined'){
     alert('Não foi possível carregar o gerador de planilha (é preciso estar conectado à internet na primeira vez que abrir o sistema).');
     return;
@@ -3458,7 +3562,13 @@ function exportarFunilPorCampanha(leads, rotuloPeriodo){
     '% conversão (lead→venda)': pct(totalGeral.fechados, totalGeral.total),
     'Perdidos': totalGeral.perdidos||0
   });
-  const ws = XLSX.utils.json_to_sheet(linhas);
+  // Linhas de cabeçalho acima da tabela, mostrando qual período foi filtrado e quando a
+  // planilha foi gerada (pra deixar isso registrado dentro do próprio arquivo, não só no nome).
+  const ws = XLSX.utils.json_to_sheet(linhas, {origin:'A3'});
+  XLSX.utils.sheet_add_aoa(ws, [
+    [`Período: ${periodoLabel || 'Todo o período (desde o início)'}`],
+    [`Gerado em: ${new Date().toLocaleString('pt-BR')}`]
+  ], {origin:'A1'});
   ws['!cols'] = [
     {wch:32},{wch:13},{wch:11},{wch:12},{wch:12},{wch:13},{wch:15},{wch:16},{wch:16},{wch:17},
     {wch:11},{wch:11},{wch:16},{wch:20},{wch:10}
@@ -3819,8 +3929,10 @@ function renderPowerBI(){
   const btnExportarFunil = document.getElementById('btnExportarFunilCampanha');
   if(btnExportarFunil) btnExportarFunil.addEventListener('click', ()=>{
     if(!leads.length){ alert('Nenhum lead encontrado nesse período (considerando também os filtros de Produto/Corretor/Período lá em cima, se houver).'); return; }
+    const fmtBR = iso => iso ? iso.split('-').reverse().join('/') : '';
     const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
-    exportarFunilPorCampanha(leads, rotulo);
+    const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
+    exportarFunilPorCampanha(leads, rotulo, periodoLabel);
   });
 }
 

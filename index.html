@@ -406,7 +406,8 @@ function defaultState(){
     config: { nome: 'ImobiCRM', logo: null, subtitulo: 'Corretor', cidades: 'Mogi Mirim, Holambra e Piracicaba', meta: 30000, theme: defaultTheme() },
     roletaConfig: { participantes: [], ativa: true, prazoMinutos: 20 },
     usuarios: [], produtos: [], imobiliarias: [],
-    leads: [], clientes: [], imoveis: [], compromissos: [], comissoes: [], despesas: [], receitas: [], investimentos: []
+    leads: [], clientes: [], imoveis: [], compromissos: [], comissoes: [], despesas: [], receitas: [], investimentos: [],
+    metasCorretor: [], academiaConteudos: [], academiaProgresso: []
   };
 }
 let state = defaultState();
@@ -450,6 +451,11 @@ function receitaToRow(r){ return { id:r.id, descricao:r.descricao, origem:r.orig
 function rowToDespesa(r){ return { id:r.id, descricao:r.descricao, categoria:r.categoria, valor:r.valor, data:r.data, corretorId:r.corretor_id }; }
 function despesaToRow(d){ return { id:d.id, descricao:d.descricao, categoria:d.categoria, valor:d.valor||0, data:d.data||null, corretor_id:d.corretorId }; }
 
+function rowToMetaCorretor(r){ return { id:r.id, corretorId:r.corretor_id, mes:r.mes, metaVendas:r.meta_vendas||0, metaLeadsQualificados:r.meta_leads_qualificados||0, metaVisitas:r.meta_visitas||0, premio:r.premio||'' }; }
+function metaCorretorToRow(m){ return { id:m.id, corretor_id:m.corretorId, mes:m.mes, meta_vendas:m.metaVendas||0, meta_leads_qualificados:m.metaLeadsQualificados||0, meta_visitas:m.metaVisitas||0, premio:m.premio||null }; }
+function rowToConteudoAcademia(r){ return { id:r.id, titulo:r.titulo, descricao:r.descricao||'', categoria:r.categoria||'Geral', url:r.url||'', ordem:r.ordem||0 }; }
+function conteudoAcademiaToRow(ct){ return { id:ct.id, titulo:ct.titulo, descricao:ct.descricao||null, categoria:ct.categoria||null, url:ct.url||null, ordem:ct.ordem||0 }; }
+
 /* ---------- carregar tudo do Supabase após login ---------- */
 /* A API do Supabase (PostgREST) devolve no máximo 1000 linhas por consulta, mesmo pedindo
    select('*') sem limite nenhum — se a tabela tiver mais que isso, o resto fica faltando
@@ -473,10 +479,11 @@ async function fetchAllRows(table, columns){
   return all;
 }
 async function pullAllData(){
-  const [leadsData, clientesData, imoveisData, compData, comisData, despData, recData, invData, profR, cfgR, prodR, imobR, roletaR] = await Promise.all([
+  const [leadsData, clientesData, imoveisData, compData, comisData, despData, recData, invData, metasData, conteudosData, progressoData, profR, cfgR, prodR, imobR, roletaR] = await Promise.all([
     fetchAllRows('leads'), fetchAllRows('clientes'), fetchAllRows('imoveis'),
     fetchAllRows('compromissos'), fetchAllRows('comissoes'), fetchAllRows('despesas'),
     fetchAllRows('receitas'), fetchAllRows('investimentos_mkt'),
+    fetchAllRows('metas_corretor'), fetchAllRows('academia_conteudos'), fetchAllRows('academia_progresso'),
     sb.from('profiles').select('*'), sb.from('config').select('*').eq('id',1).maybeSingle(),
     sb.from('produtos').select('*'), sb.from('imobiliarias').select('*'), sb.from('roleta_config').select('*').eq('id','default').maybeSingle()
   ]);
@@ -488,6 +495,9 @@ async function pullAllData(){
   state.despesas = despData.map(rowToDespesa);
   state.receitas = recData.map(rowToReceita);
   state.investimentos = invData.map(rowToInvestimento);
+  state.metasCorretor = metasData.map(rowToMetaCorretor);
+  state.academiaConteudos = conteudosData.map(rowToConteudoAcademia);
+  state.academiaProgresso = progressoData.map(p=>({usuarioId:p.usuario_id, conteudoId:p.conteudo_id, concluidoEm:p.concluido_em}));
   state.usuarios = (profR.data||[]).map(p=>({id:p.id, nome:p.nome, papel:p.papel, telefone:p.telefone, creci:p.creci, imobiliariaId:p.imobiliaria_id, disponivelRoleta:!!p.disponivel_roleta, avatarUrl:p.avatar_url||null}));
   state.produtos = (prodR.data||[]).map(rowToProduto);
   state.imobiliarias = (imobR.data||[]).map(rowToImobiliaria);
@@ -566,6 +576,8 @@ async function syncToSupabase(){
       await syncTable('produtos', state.produtos, produtoToRow);
       await syncTable('imobiliarias', state.imobiliarias, imobiliariaToRow);
       await syncTable('investimentos_mkt', state.investimentos, investimentoToRow);
+      await syncTable('metas_corretor', state.metasCorretor, metaCorretorToRow);
+      await syncTable('academia_conteudos', state.academiaConteudos, conteudoAcademiaToRow);
       await sb.from('config').upsert([{ id:1, nome: state.config.nome, logo: state.config.logo, subtitulo: state.config.subtitulo, cidades: state.config.cidades, meta: state.config.meta, theme: state.config.theme }], {onConflict:'id'});
     }
   }catch(e){ console.error('Erro ao sincronizar com o Supabase', e); }
@@ -891,6 +903,7 @@ const ALL_VIEWS = [
   {id:'financeiro', label:'Financeiro', icon:'$'},
   {id:'relatorios', label:'Relatórios', icon:'≡'},
   {id:'powerbi', label:'Power BI', icon:'▦'},
+  {id:'metasAcademia', label:'Metas & Academia', icon:'🏆'},
   {id:'equipe', label:'Equipe', icon:'☖', teamOnly:true},
   {id:'imobiliarias', label:'Imobiliárias', icon:'⌸', gestorOnly:true},
   {id:'roleta', label:'Roleta de leads', icon:'⟲', gestorOnly:true},
@@ -1031,7 +1044,7 @@ function renderAll(){
   const renderers = {
     dashboard: renderDashboard, pendencias: renderPendencias, produtos: renderProdutos, leads: renderLeads, clientes: renderClientes,
     imoveis: renderImoveis, agenda: renderAgenda, financeiro: renderFinanceiro,
-    relatorios: renderRelatorios, powerbi: renderPowerBI, equipe: renderEquipe, imobiliarias: renderImobiliarias, roleta: renderRoleta, config: renderConfig
+    relatorios: renderRelatorios, powerbi: renderPowerBI, metasAcademia: renderMetasAcademia, equipe: renderEquipe, imobiliarias: renderImobiliarias, roleta: renderRoleta, config: renderConfig
   };
   renderers[currentView]();
 }
@@ -3624,10 +3637,141 @@ function renderRelatorios(){
 
     <div class="section-block" style="font-size:12.5px; color:var(--ink-soft);">📊 Quer ver de onde vêm seus leads, taxa de conversão por origem/perfil e mais gráficos? Acesse a aba <b>Power BI</b> no menu.</div>
 
-    <div class="section-block no-print">
+    <div class="section-block no-print" style="display:flex; gap:10px; flex-wrap:wrap;">
       <button class="btn btn-outline" onclick="window.print()">🖨 Imprimir relatório</button>
+      <button class="btn" id="btnRelatorioSemanal">📅 Relatório semanal</button>
     </div>
   `;
+  document.getElementById('btnRelatorioSemanal').addEventListener('click', ()=>abrirRelatorioSemanal());
+}
+
+/* ---------- Relatório semanal (um clique, formatado pra impressão/PDF) ---------- */
+let relatorioSemanaRef = todayISO(); // qualquer data dentro da semana que está sendo exibida
+
+// Dada uma data (YYYY-MM-DD), devolve a segunda-feira e o domingo da semana em que ela cai.
+function limitesSemana(refISO){
+  const d = new Date(refISO + 'T00:00:00');
+  const diaSemana = d.getDay(); // 0=domingo .. 6=sábado
+  const offsetSegunda = diaSemana===0 ? -6 : (1 - diaSemana);
+  const seg = new Date(d); seg.setDate(d.getDate()+offsetSegunda);
+  const dom = new Date(seg); dom.setDate(seg.getDate()+6);
+  return { de: seg.toISOString().slice(0,10), ate: dom.toISOString().slice(0,10) };
+}
+function contarNoPeriodo(leads, campo, de, ate){
+  return leads.filter(l=> l[campo] && l[campo] >= de && l[campo] <= ate).length;
+}
+
+function abrirRelatorioSemanal(){
+  const { de, ate } = limitesSemana(relatorioSemanaRef);
+  const leads = scoped(state.leads);
+  const compromissos = scoped(state.compromissos);
+  const comissoes = scoped(state.comissoes);
+
+  const novos = contarNoPeriodo(leads, 'dataCriacao', de, ate);
+  const qualificados = contarNoPeriodo(leads, 'dataQualificado', de, ate);
+  const visitasAgendadas = contarNoPeriodo(leads, 'dataVisitaAgendada', de, ate);
+  const visitasRealizadas = contarNoPeriodo(leads, 'dataVisitaRealizada', de, ate);
+  const propostas = contarNoPeriodo(leads, 'dataProposta', de, ate);
+  const vendas = contarNoPeriodo(leads, 'dataVenda', de, ate);
+  const perdidosAtivosNaSemana = leads.filter(l=>l.status==='Perdido' && l.ultimoContato && l.ultimoContato>=de && l.ultimoContato<=ate).length;
+
+  const comissaoSemana = comissoes.filter(cm=>cm.status==='Recebido' && cm.dataRecebimento && cm.dataRecebimento>=de && cm.dataRecebimento<=ate).reduce((s,cm)=>s+Number(cm.valor||0),0);
+
+  const compSemana = compromissos.filter(cm=>cm.data>=de && cm.data<=ate);
+  const compConcluidos = compSemana.filter(cm=>cm.status!=='Pendente').length;
+  const compPendentes = compSemana.filter(cm=>cm.status==='Pendente').length;
+
+  const origemSemana = {};
+  leads.filter(l=>l.dataCriacao>=de && l.dataCriacao<=ate).forEach(l=>{ origemSemana[l.origem] = (origemSemana[l.origem]||0)+1; });
+
+  // Ranking por corretor só faz sentido pra quem gerencia equipe (gestor/gerente)
+  let rankingHtml = '';
+  if(canManageTeam()){
+    const idsEquipe = isGestor() ? state.usuarios.map(u=>u.id) : teamMemberIds();
+    const porCorretor = idsEquipe.map(id=>{
+      const leadsDoCorretor = leads.filter(l=>l.corretorId===id);
+      return {
+        nome: corretorNome(id),
+        novos: contarNoPeriodo(leadsDoCorretor, 'dataCriacao', de, ate),
+        fechamentos: contarNoPeriodo(leadsDoCorretor, 'dataVenda', de, ate)
+      };
+    }).filter(r=>r.novos>0 || r.fechamentos>0).sort((a,b)=> b.fechamentos-a.fechamentos || b.novos-a.novos);
+    rankingHtml = `
+      <table style="width:100%; font-size:12.5px; margin-top:6px;">
+        <thead><tr><th style="text-align:left;">Corretor</th><th>Leads novos</th><th>Fechamentos</th></tr></thead>
+        <tbody>${porCorretor.length ? porCorretor.map(r=>`<tr><td>${r.nome}</td><td class="mono" style="text-align:center;">${r.novos}</td><td class="mono" style="text-align:center;">${r.fechamentos}</td></tr>`).join('') : '<tr><td colspan="3" style="color:#777;">Sem atividade nesta semana.</td></tr>'}</tbody>
+      </table>`;
+  }
+
+  const fmtBR = iso => iso.split('-').reverse().join('/');
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="overlay">
+      <div class="modal wide">
+        <div class="modal-actions no-print" style="justify-content:space-between; margin-top:0; margin-bottom:14px;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <button class="btn-sm btn-outline" id="semanaAnterior">← Semana anterior</button>
+            <button class="btn-sm btn-outline" id="semanaAtual">Semana atual</button>
+            <button class="btn-sm btn-outline" id="semanaProxima">Próxima semana →</button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-outline btn-sm" id="closeRelatorioSemanal">Fechar</button>
+            <button class="btn btn-sm" id="printRelatorioSemanal">🖨 Imprimir / Salvar PDF</button>
+          </div>
+        </div>
+        <div class="ficha-content">
+          <div class="ficha-header">
+            <div class="logo">${state.config.logo?`<img src="${state.config.logo}">`:''}</div>
+            <div>
+              <div class="ficha-title">Relatório Semanal</div>
+              <div class="ficha-sub">${state.config.nome||'ImobiCRM'} · ${fmtBR(de)} a ${fmtBR(ate)} · emitido em ${fmtDate(todayISO())}</div>
+            </div>
+          </div>
+          <div class="ficha-grid">
+            <div><b>Leads novos</b>${novos}</div>
+            <div><b>Qualificados</b>${qualificados}</div>
+            <div><b>Visitas agendadas</b>${visitasAgendadas}</div>
+            <div><b>Visitas realizadas</b>${visitasRealizadas}</div>
+            <div><b>Propostas</b>${propostas}</div>
+            <div><b>Vendas fechadas</b>${vendas}</div>
+            <div><b>Comissão recebida na semana</b>${fmtMoney(comissaoSemana)}</div>
+            <div><b>Leads perdidos (última atividade na semana)</b>${perdidosAtivosNaSemana}</div>
+            <div><b>Compromissos concluídos</b>${compConcluidos}</div>
+            <div><b>Compromissos pendentes na semana</b>${compPendentes}</div>
+          </div>
+          <p style="font-size:11px; color:#777;">Os indicadores de qualificado/visita/proposta/venda contam quem chegou nessa etapa pela primeira vez dentro do período, mesmo que hoje esteja em outro status.</p>
+
+          <div style="margin-top:10px;">
+            <div style="font-size:11.5px; font-weight:600; color:#777; text-transform:uppercase; margin-bottom:6px;">Leads novos por origem</div>
+            <table style="width:100%; font-size:12.5px;">
+              <tbody>${Object.keys(origemSemana).length ? Object.entries(origemSemana).sort((a,b)=>b[1]-a[1]).map(([o,n])=>`<tr><td>${o}</td><td class="mono" style="text-align:right;">${n}</td></tr>`).join('') : '<tr><td style="color:#777;">Nenhum lead novo nesta semana.</td></tr>'}</tbody>
+            </table>
+          </div>
+
+          ${canManageTeam() ? `<div style="margin-top:16px;">
+            <div style="font-size:11.5px; font-weight:600; color:#777; text-transform:uppercase; margin-bottom:6px;">Ranking de corretores na semana</div>
+            ${rankingHtml}
+          </div>` : ''}
+
+          <div class="ficha-footer">${state.config.cidades||''}</div>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+  document.getElementById('closeRelatorioSemanal').addEventListener('click', closeModal);
+  document.getElementById('printRelatorioSemanal').addEventListener('click', ()=>window.print());
+  document.getElementById('semanaAnterior').addEventListener('click', ()=>{
+    const d = new Date(relatorioSemanaRef+'T00:00:00'); d.setDate(d.getDate()-7);
+    relatorioSemanaRef = d.toISOString().slice(0,10); abrirRelatorioSemanal();
+  });
+  document.getElementById('semanaProxima').addEventListener('click', ()=>{
+    const d = new Date(relatorioSemanaRef+'T00:00:00'); d.setDate(d.getDate()+7);
+    relatorioSemanaRef = d.toISOString().slice(0,10); abrirRelatorioSemanal();
+  });
+  document.getElementById('semanaAtual').addEventListener('click', ()=>{
+    relatorioSemanaRef = todayISO(); abrirRelatorioSemanal();
+  });
 }
 
 /* ============================================================
@@ -3777,6 +3921,10 @@ function renderPowerBI(){
   const porTamanhoLote = agruparComConversao(leads, l=>l.tamanhoLoteDesejado, {limite:8});
   const porCampanha = agruparComConversao(leads, l=>l.campanha, {limite:7});
   const porCriativo = agruparComConversao(leads, l=>l.criativo, {limite:7});
+  const porTipoImovel = agruparComConversao(leads, l=>l.tipoImovelDesejado, {limite:8});
+  const porObjecao = agruparComConversao(leads, l=>l.objecaoPrincipal || 'Ainda não analisado', {limite:8});
+  const porFormaPagamento = agruparComConversao(leads, l=>(l.fichaIa && l.fichaIa.formaPagamento) || 'Ainda não analisado', {limite:6});
+  const leadsAnalisadosIA = leads.filter(l=>l.pontuacaoIa!==null && l.pontuacaoIa!==undefined).length;
 
   const hoje = new Date();
   const mesesArr = [];
@@ -3906,6 +4054,26 @@ function renderPowerBI(){
     <div class="pbi-grid2">
       ${pbiCard('Leads por criativo', 'Qual anúncio/criativo específico está trazendo mais leads (o criativo pode ser pausado, a campanha continua existindo).', pbiBarRows(porCriativo.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-red)', fullLabel:true}))}
       ${pbiCard('Conversão por criativo', '% dos leads de cada criativo que já fecharam.', pbiBarRows(porCriativo.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-red)', max:100, fmt:v=>v+'%', fullLabel:true}))}
+    </div>
+
+    <div class="pbi-card">
+      <div class="pbi-card-title">🤖 Inteligência de leads (IA)</div>
+      <div class="pbi-card-sub" style="margin-bottom:0;">Segmentação a partir da análise de IA feita em cada lead (botão "Analisar com IA" no detalhe do lead) e do tipo de imóvel desejado. ${leadsAnalisadosIA} de ${total} lead(s) deste recorte já têm análise de IA — quanto mais leads analisados, mais completo fica "Objeção principal" e "Forma de pagamento".</div>
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por tipo de imóvel desejado', 'O que os leads estão procurando.', pbiBarRows(porTipoImovel.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-teal)', fullLabel:true}))}
+      ${pbiCard('Conversão por tipo de imóvel desejado', '% de cada tipo de imóvel que já fechou.', pbiBarRows(porTipoImovel.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%', fullLabel:true}))}
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por objeção principal', 'Principal trava identificada pela IA na conversa (preço, localização, financiamento...).', pbiBarRows(porObjecao.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-red)', fullLabel:true}))}
+      ${pbiCard('Conversão por objeção principal', '% de cada objeção que ainda assim fechou negócio.', pbiBarRows(porObjecao.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-red)', max:100, fmt:v=>v+'%', fullLabel:true}))}
+    </div>
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads por forma de pagamento declarada', 'Forma de pagamento identificada pela IA na conversa.', pbiBarRows(porFormaPagamento.map(o=>({label:o.label, value:o.count})), {color:(it,i)=>PBI_GOLD_RAMP[i]||'var(--pbi-gold)', fullLabel:true}))}
+      ${pbiCard('Conversão por forma de pagamento', '% de cada forma de pagamento que já fechou.', pbiBarRows(porFormaPagamento.map(o=>({label:o.label, value:o.pct})), {color:(it,i)=>PBI_GOLD_RAMP[i]||'var(--pbi-gold)', max:100, fmt:v=>v+'%', fullLabel:true}))}
     </div>
 
     ${pbiCard('Leads captados x fechamentos (acumulado)', 'Últimos 6 meses, por data de criação do lead.',
@@ -4376,6 +4544,182 @@ function openImobiliariaForm(existing){
         toast('Imobiliária cadastrada.');
       }
       save(); closeModal(); renderImobiliarias();
+    }
+  });
+}
+
+/* ============================================================
+   METAS GAMIFICADAS + ACADEMIA DE CORRETORES
+   (da reunião da VDM: metas com premiação, ranking, e trilha de treinamento)
+============================================================ */
+let metasMesRef = mesAtualISO();
+
+function metasMesLabel(mes){
+  const [ano, m] = mes.split('-');
+  return NOMES_MES[Number(m)-1] + '/' + ano;
+}
+
+// Conta quantos leads desse corretor chegaram em cada etapa (pela 1ª vez) dentro do mês de referência
+function progressoMetaCorretor(corretorId, mes){
+  const leadsDoCorretor = state.leads.filter(l=>l.corretorId===corretorId);
+  const noMes = (campo) => leadsDoCorretor.filter(l=>l[campo] && l[campo].slice(0,7)===mes).length;
+  return { vendas: noMes('dataVenda'), qualificados: noMes('dataQualificado'), visitas: noMes('dataVisitaRealizada') };
+}
+
+function metaProgressBar(label, atual, meta, cor){
+  const pct = meta>0 ? Math.min(100, Math.round(100*atual/meta)) : 0;
+  const bateu = meta>0 && atual>=meta;
+  return `<div style="margin-bottom:8px;">
+    <div style="display:flex; justify-content:space-between; font-size:11.5px; margin-bottom:3px;"><span>${label}</span><span class="mono">${atual}${meta>0?' / '+meta:''} ${bateu?'🏆':''}</span></div>
+    <div style="background:var(--paper-2); border-radius:20px; height:8px; overflow:hidden;">
+      <div style="background:${bateu?'var(--verde)':cor}; height:100%; width:${meta>0?pct:0}%;"></div>
+    </div>
+  </div>`;
+}
+
+function renderMetasAcademia(){
+  const c = document.getElementById('content');
+  const idsEquipe = isGestor() ? state.usuarios.map(u=>u.id) : (canManageTeam() ? teamMemberIds() : [currentUser().id]);
+  const corretores = state.usuarios.filter(u=>idsEquipe.includes(u.id));
+
+  const cardsMetasHtml = corretores.map(u=>{
+    const meta = state.metasCorretor.find(m=>m.corretorId===u.id && m.mes===metasMesRef);
+    const prog = progressoMetaCorretor(u.id, metasMesRef);
+    return `
+      <div class="card" style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;">
+          <b>${u.nome}</b>
+          ${isGestor()?`<button class="btn-sm btn-outline" data-corretor="${u.id}" data-editmeta="1">✏️ Editar meta</button>`:''}
+        </div>
+        ${meta ? `
+          ${metaProgressBar('Vendas', prog.vendas, meta.metaVendas, 'var(--azul)')}
+          ${metaProgressBar('Leads qualificados', prog.qualificados, meta.metaLeadsQualificados, 'var(--latao)')}
+          ${metaProgressBar('Visitas realizadas', prog.visitas, meta.metaVisitas, 'var(--vermelho)')}
+          ${meta.premio?`<div style="font-size:12px; margin-top:6px;">🎁 <b>Premiação:</b> ${meta.premio}</div>`:''}
+        ` : `<p style="font-size:12.5px; color:var(--ink-soft);">Sem meta definida para ${metasMesLabel(metasMesRef)}.</p>`}
+      </div>`;
+  }).join('') || '<p style="color:var(--ink-soft);">Nenhum corretor na equipe ainda.</p>';
+
+  const totalConteudos = state.academiaConteudos.length;
+  const categorias = [...new Set(state.academiaConteudos.map(ct=>ct.categoria||'Geral'))];
+  const meusProgressos = new Set(state.academiaProgresso.filter(p=>p.usuarioId===currentUser().id).map(p=>p.conteudoId));
+
+  const academiaHtml = !totalConteudos ? emptyState('Academia vazia', isGestor() ? 'Adicione o primeiro conteúdo de treinamento com o botão abaixo.' : 'Ainda não há conteúdo de treinamento cadastrado.') :
+    categorias.map(cat=>{
+      const itens = state.academiaConteudos.filter(ct=>(ct.categoria||'Geral')===cat).sort((a,b)=>(a.ordem||0)-(b.ordem||0) || a.titulo.localeCompare(b.titulo));
+      return `
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; margin-bottom:8px;">${cat}</div>
+        ${itens.map(ct=>{
+          const concluido = meusProgressos.has(ct.id);
+          return `<div class="card" style="margin-bottom:8px; display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+            <div style="flex:1;">
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer;">
+                <input type="checkbox" class="academia-check" data-id="${ct.id}" ${concluido?'checked':''} style="margin-top:3px; width:16px; height:16px; cursor:pointer;">
+                <span>
+                  <b>${ct.titulo}</b>${ct.url?` — <a href="${ct.url}" target="_blank" rel="noopener">abrir</a>`:''}
+                  ${ct.descricao?`<div style="font-size:12px; color:var(--ink-soft); margin-top:2px;">${ct.descricao}</div>`:''}
+                </span>
+              </label>
+            </div>
+            ${isGestor()?`<div style="display:flex; gap:6px; flex-shrink:0;">
+              <button class="btn-sm btn-outline academia-edit" data-id="${ct.id}">Editar</button>
+              <button class="btn-sm btn-danger academia-del" data-id="${ct.id}">🗑</button>
+            </div>`:''}
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+
+  c.innerHTML = `
+    <div class="section-title"><span>🏆 Metas do mês</span>
+      <input type="month" id="metasFiltroMes" value="${metasMesRef}" style="max-width:160px;">
+    </div>
+    ${cardsMetasHtml}
+
+    <div class="section-title" style="margin-top:28px;"><span>🎓 Academia de corretores</span>
+      ${isGestor()?'<button class="btn btn-sm" id="btnNovoConteudo">+ Novo conteúdo</button>':''}
+    </div>
+    ${!isGestor() && totalConteudos ? `<p style="font-size:12px; color:var(--ink-soft); margin-top:-6px;">${meusProgressos.size} de ${totalConteudos} concluído(s).</p>` : ''}
+    ${academiaHtml}
+  `;
+
+  document.getElementById('metasFiltroMes').addEventListener('change', e=>{ metasMesRef = e.target.value || mesAtualISO(); renderMetasAcademia(); });
+
+  c.querySelectorAll('[data-editmeta]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const corretorId = btn.dataset.corretor;
+    const u = state.usuarios.find(x=>x.id===corretorId);
+    const existente = state.metasCorretor.find(m=>m.corretorId===corretorId && m.mes===metasMesRef);
+    openModal({
+      title: `Meta de ${u.nome} — ${metasMesLabel(metasMesRef)}`,
+      schema: [
+        {key:'metaVendas', label:'Meta de vendas', type:'number'},
+        {key:'metaLeadsQualificados', label:'Meta de leads qualificados', type:'number'},
+        {key:'metaVisitas', label:'Meta de visitas realizadas', type:'number'},
+        {key:'premio', label:'Premiação (opcional)'}
+      ],
+      data: existente ? Object.assign({}, existente) : {metaVendas:0, metaLeadsQualificados:0, metaVisitas:0, premio:''},
+      onSave:(r)=>{
+        if(existente){
+          Object.assign(existente, {metaVendas:Number(r.metaVendas)||0, metaLeadsQualificados:Number(r.metaLeadsQualificados)||0, metaVisitas:Number(r.metaVisitas)||0, premio:r.premio});
+        }else{
+          state.metasCorretor.push({ id:uid(), corretorId, mes:metasMesRef, metaVendas:Number(r.metaVendas)||0, metaLeadsQualificados:Number(r.metaLeadsQualificados)||0, metaVisitas:Number(r.metaVisitas)||0, premio:r.premio });
+        }
+        save(); closeModal(); renderMetasAcademia();
+        toast('Meta salva.');
+      }
+    });
+  }));
+
+  const btnNovoConteudo = document.getElementById('btnNovoConteudo');
+  if(btnNovoConteudo) btnNovoConteudo.addEventListener('click', ()=>openConteudoAcademiaForm());
+  c.querySelectorAll('.academia-edit').forEach(btn=>btn.addEventListener('click', ()=>{
+    openConteudoAcademiaForm(state.academiaConteudos.find(ct=>ct.id===btn.dataset.id));
+  }));
+  c.querySelectorAll('.academia-del').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!confirm('Excluir este conteúdo da academia?')) return;
+    state.academiaConteudos = state.academiaConteudos.filter(ct=>ct.id!==btn.dataset.id);
+    if(sb) sb.from('academia_conteudos').delete().eq('id', btn.dataset.id).then(({error})=>{ if(error) console.error(error); });
+    save(); renderMetasAcademia();
+  }));
+  // O progresso de cada usuário é uma tabela própria (chave composta usuário+conteúdo), gravada
+  // direto no Supabase a cada clique, em vez de entrar no upsert em lote de academiaConteudos —
+  // assim um corretor marcando "concluído" nunca depende do próximo save() de outra tela.
+  c.querySelectorAll('.academia-check').forEach(cb=>cb.addEventListener('change', async ()=>{
+    const conteudoId = cb.dataset.id;
+    const usuarioId = currentUser().id;
+    if(cb.checked){
+      state.academiaProgresso.push({usuarioId, conteudoId, concluidoEm: new Date().toISOString()});
+      if(sb){ const {error} = await sb.from('academia_progresso').upsert([{usuario_id:usuarioId, conteudo_id:conteudoId}], {onConflict:'usuario_id,conteudo_id'}); if(error) console.error(error); }
+    }else{
+      state.academiaProgresso = state.academiaProgresso.filter(p=>!(p.usuarioId===usuarioId && p.conteudoId===conteudoId));
+      if(sb){ const {error} = await sb.from('academia_progresso').delete().eq('usuario_id', usuarioId).eq('conteudo_id', conteudoId); if(error) console.error(error); }
+    }
+    try{ localStorage.setItem('imobicrm_cache_v1', JSON.stringify(state)); }catch(e){}
+    renderMetasAcademia();
+  }));
+}
+
+function openConteudoAcademiaForm(existing){
+  openModal({
+    title: existing ? 'Editar conteúdo' : 'Novo conteúdo da academia',
+    schema: [
+      {key:'titulo', label:'Título'},
+      {key:'categoria', label:'Categoria', placeholder:'Ex: Primeiros passos, Objeções, Produto...'},
+      {key:'url', label:'Link (vídeo, PDF, artigo...)'},
+      {key:'descricao', label:'Descrição', type:'textarea'},
+      {key:'ordem', label:'Ordem de exibição', type:'number'}
+    ],
+    data: existing ? Object.assign({}, existing) : {categoria:'Geral', ordem:0},
+    onSave:(r)=>{
+      if(existing){
+        Object.assign(existing, {titulo:r.titulo, categoria:r.categoria||'Geral', url:r.url, descricao:r.descricao, ordem:Number(r.ordem)||0});
+        toast('Conteúdo atualizado.');
+      }else{
+        state.academiaConteudos.push({ id:uid(), titulo:r.titulo, categoria:r.categoria||'Geral', url:r.url, descricao:r.descricao, ordem:Number(r.ordem)||0 });
+        toast('Conteúdo adicionado.');
+      }
+      save(); closeModal(); renderMetasAcademia();
     }
   });
 }

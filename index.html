@@ -343,6 +343,11 @@ tr:hover td{background:var(--paper-2);}
 .pbi-gauge-inner{width:96px; height:96px; border-radius:50%; background:var(--pbi-card); display:flex; flex-direction:column; align-items:center; justify-content:center;}
 .pbi-gauge-value{font-size:22px; font-weight:700;}
 .pbi-gauge-label{font-size:9px; color:var(--pbi-ink-soft); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; text-align:center; padding:0 10px;}
+.pbi-table{width:100%; font-size:12.5px; border-collapse:collapse;}
+.pbi-table th, .pbi-table td{padding:7px 8px; text-align:center; border-bottom:1px solid var(--pbi-line); color:var(--pbi-ink);}
+.pbi-table th{font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--pbi-ink-soft); font-weight:600;}
+.pbi-row-click{cursor:pointer;}
+.pbi-row-click:hover{background:var(--pbi-card-2);}
 @media(max-width:900px){
   .pbi-kpis{grid-template-columns:repeat(2,1fr);}
   .pbi-grid2, .pbi-grid3{grid-template-columns:1fr;}
@@ -425,14 +430,14 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null, motivoPerda:r.motivo_perda||null }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null, motivo_perda:l.motivoPerda||null }; }
 
 function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
 function investimentoToRow(inv){ return { id:inv.id, produto_id:inv.produtoId||null, mes:inv.mes, valor:Number(inv.valor||0) }; }
 
-function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null }; }
-function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null }; }
+function rowToProduto(r){ return { id:r.id, nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, slug:r.slug, ativo:!!r.ativo, condicoesPadrao: r.condicoes_padrao||condicoesPadraoDefault(), logo: r.logo||null, tipo:r.tipo||'Loteamento aberto', quantidadeLotes:r.quantidade_lotes||null, quadra:r.quadra||'', areaMinima:r.area_minima||'', frenteMinima:r.frente_minima||'', taxaCondominio:r.taxa_condominio||'', localizacaoMapaUrl:r.localizacao_mapa_url||'', documentos:r.documentos||[] }; }
+function produtoToRow(p){ return { id:p.id, nome:p.nome, empresa:p.empresa, cidade:p.cidade, descricao:p.descricao, slug:p.slug, ativo:!!p.ativo, condicoes_padrao: p.condicoesPadrao||condicoesPadraoDefault(), logo: p.logo||null, tipo:p.tipo||null, quantidade_lotes:p.quantidadeLotes||null, quadra:p.quadra||null, area_minima:p.areaMinima||null, frente_minima:p.frenteMinima||null, taxa_condominio:p.taxaCondominio||null, localizacao_mapa_url:p.localizacaoMapaUrl||null, documentos:p.documentos||[] }; }
 
 function rowToCliente(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, cpfCnpj:r.cpf_cnpj, endereco:r.endereco, dataNascimento:r.data_nascimento, profissao:r.profissao, imoveisVinculados:r.imoveis_vinculados||[], dataFechamento:r.data_fechamento, corretorId:r.corretor_id }; }
 function clienteToRow(c){ return { id:c.id, nome:c.nome, telefone:c.telefone, email:c.email, cpf_cnpj:c.cpfCnpj, endereco:c.endereco, data_nascimento:c.dataNascimento||null, profissao:c.profissao, imoveis_vinculados:c.imoveisVinculados||[], data_fechamento:c.dataFechamento||null, corretor_id:c.corretorId }; }
@@ -2016,6 +2021,7 @@ function changeLeadStatus(lead, novoStatus, after){
   if(novoStatus==='Perdido'){
     const motivo = prompt('Motivo da perda (opcional):') || '';
     lead.observacoes = (lead.observacoes?lead.observacoes+' | ':'') + (motivo?('Perdido: '+motivo):'Perdido.');
+    lead.motivoPerda = motivo || 'Não informado';
   }
   lead.status = novoStatus;
   marcarDataEtapa(lead, novoStatus);
@@ -2045,6 +2051,7 @@ function changeLeadStatusBulk(ids, novoStatus, after){
     if(lead.status===novoStatus) return;
     if(novoStatus==='Perdido'){
       lead.observacoes = (lead.observacoes?lead.observacoes+' | ':'') + (motivo?('Perdido: '+motivo):'Perdido.');
+      lead.motivoPerda = motivo || 'Não informado';
     }
     lead.status = novoStatus;
     marcarDataEtapa(lead, novoStatus);
@@ -3506,6 +3513,114 @@ function agruparComConversao(leads, keyFn, opts){
   return arr.map(a=>({label:a.label, count:a.total, pct: a.total ? Math.round(100*a.fechou/a.total) : 0}));
 }
 
+// Agrupa por chave e calcula a MÉDIA de um valor numérico (ex.: nota de IA média por campanha),
+// em vez de contagem/conversão. Ignora itens onde valueFn não devolve um número (ex.: lead ainda não analisado pela IA).
+function agruparMedia(items, keyFn, valueFn, opts){
+  opts = opts || {};
+  const cont = {};
+  items.forEach(it=>{
+    const v = valueFn(it);
+    if(v===null || v===undefined || isNaN(v)) return;
+    const k = keyFn(it) || 'Não informado';
+    if(!cont[k]) cont[k] = {soma:0, n:0};
+    cont[k].soma += Number(v);
+    cont[k].n++;
+  });
+  let arr = Object.entries(cont).map(([label,v])=>({label, media: Math.round(v.soma/v.n), n: v.n})).sort((a,b)=>b.n-a.n);
+  if(opts.limite && arr.length > opts.limite) arr = arr.slice(0, opts.limite);
+  return arr;
+}
+
+// Agrupa e CONTA (sem conversão) — usado pra motivo de perda, por exemplo, onde todo mundo já é "Perdido".
+function contarPorCategoria(items, keyFn, limite){
+  const cont = {};
+  items.forEach(it=>{ const k = keyFn(it) || 'Não informado'; cont[k] = (cont[k]||0)+1; });
+  let arr = Object.entries(cont).map(([label,count])=>({label,count})).sort((a,b)=>b.count-a.count);
+  if(limite && arr.length > limite){
+    const topo = arr.slice(0, limite-1);
+    const resto = arr.slice(limite-1);
+    arr = [...topo, {label:'Outros', count: resto.reduce((s,i)=>s+i.count,0)}];
+  }
+  return arr;
+}
+
+// Modal simples e genérico pra listar leads (ex.: "quais os leads não contactados da Erica") — clicável, abre o detalhe do lead.
+function abrirListaLeadsModal(titulo, leads){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="overlay">
+      <div class="modal">
+        <button class="btn-sm btn-outline modal-close" id="closeListaLeads">Fechar</button>
+        <h3>${titulo}</h3>
+        <p style="font-size:12px; color:var(--ink-soft); margin-top:-6px;">${leads.length} lead(s). Clique num lead pra abrir o detalhe.</p>
+        <table><thead><tr><th style="text-align:left;">Nome</th><th>Telefone</th><th>Status</th><th>Criado em</th></tr></thead>
+        <tbody>${leads.length ? leads.map(l=>`
+          <tr class="lista-lead-open" data-id="${l.id}" style="cursor:pointer;">
+            <td>${l.nome}</td><td class="mono">${l.telefone||'—'}</td><td>${l.status}</td><td class="mono">${fmtDate(l.dataCriacao)}</td>
+          </tr>`).join('') : '<tr><td colspan="4" style="color:var(--ink-soft);">Nenhum lead.</td></tr>'}</tbody></table>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+  document.getElementById('closeListaLeads').addEventListener('click', closeModal);
+  root.querySelectorAll('.lista-lead-open').forEach(tr=>tr.addEventListener('click', ()=>{ closeModal(); openLeadDetail(tr.dataset.id); }));
+}
+
+// Pede pro bot analisar os números do funil da EQUIPE (não de um lead específico) e devolve um texto
+// com destaques, pontos de atenção, gargalos e ações recomendadas — mesmo padrão de fila/polling já
+// usado em sugerirMensagemComIA, reaproveitando a coluna "resultado" (texto livre) da ia_geracao_fila.
+async function analisarEquipeComIA(dadosFunil, dadosPorCorretor, periodoLabel, botao){
+  if(!sb){ alert('Sem conexão com o servidor agora.'); return; }
+  const textoOriginal = botao.textContent;
+  botao.textContent = 'Analisando...';
+  botao.disabled = true;
+  try{
+    const { data: userData } = await sb.auth.getUser();
+    const { data: inserido, error } = await sb.from('ia_geracao_fila').insert([{
+      tipo: 'analise_equipe',
+      entrada: { periodo: periodoLabel, funil: dadosFunil, corretores: dadosPorCorretor },
+      status: 'pendente',
+      criado_por: userData?.user?.id || null
+    }]).select('id').single();
+    if(error || !inserido){ alert('Erro ao pedir análise: ' + (error?.message||'tente novamente.')); return; }
+
+    const id = inserido.id;
+    const tentativas = 20; // ~1.5s * 20 = ~30s de espera máxima
+    for(let i=0; i<tentativas; i++){
+      await new Promise(res=>setTimeout(res, 1500));
+      const { data: item } = await sb.from('ia_geracao_fila').select('status, resultado, erro_msg').eq('id', id).single();
+      if(!item) continue;
+      if(item.status==='pronto'){ abrirAnaliseEquipeModal(item.resultado || ''); return; }
+      if(item.status==='erro'){
+        alert('A IA não conseguiu analisar a equipe: ' + (item.erro_msg||'erro desconhecido') + '. Tente de novo em um instante.');
+        return;
+      }
+    }
+    alert('A análise demorou demais e foi cancelada. Tente de novo em um instante.');
+  }catch(err){
+    console.error(err);
+    alert('Erro ao pedir análise da equipe.');
+  }finally{
+    botao.textContent = textoOriginal;
+    botao.disabled = false;
+  }
+}
+
+function abrirAnaliseEquipeModal(texto){
+  const root = document.getElementById('modalRoot');
+  root.innerHTML = `
+    <div class="modal-overlay" id="overlay">
+      <div class="modal">
+        <button class="btn-sm btn-outline modal-close" id="closeAnaliseEquipe">Fechar</button>
+        <h3>🤖 Análise da equipe (IA)</h3>
+        <div style="white-space:pre-wrap; font-size:13px; line-height:1.55; margin-top:8px;">${texto || 'Sem conteúdo.'}</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', e=>{ if(e.target.id==='overlay') closeModal(); });
+  document.getElementById('closeAnaliseEquipe').addEventListener('click', closeModal);
+}
+
 // Gera e baixa uma planilha Excel cruzando campanha x etapa do funil, pra responder "qual
 // campanha está dando retorno" -- quantos leads de cada campanha viraram contato, qualificação,
 // visita, proposta e venda. Usa as mesmas datas de primeira-vez-que-chegou-na-etapa já gravadas
@@ -3925,6 +4040,64 @@ function renderPowerBI(){
   const porObjecao = agruparComConversao(leads, l=>l.objecaoPrincipal || 'Ainda não analisado', {limite:8});
   const porFormaPagamento = agruparComConversao(leads, l=>(l.fichaIa && l.fichaIa.formaPagamento) || 'Ainda não analisado', {limite:6});
   const leadsAnalisadosIA = leads.filter(l=>l.pontuacaoIa!==null && l.pontuacaoIa!==undefined).length;
+  const notaPorCampanha = agruparMedia(leads, l=>l.campanha, l=>l.pontuacaoIa, {limite:8});
+
+  // ---- Desempenho por corretor (quem recebeu, contactou, atendeu, agendou, visitou) + drill-down
+  // nos leads que ainda não foram contactados nem uma vez — igual ao "a Erica recebeu 47, só
+  // contactou 8" mostrado na demo da VTM. Só faz sentido pra quem gerencia equipe. ----
+  const idsEquipePBI = canManageTeam() ? (isGestor() ? state.usuarios.map(u=>u.id) : teamMemberIds()) : [];
+  const desempenhoCorretor = idsEquipePBI.map(id=>{
+    const leadsDoCorretor = leads.filter(l=>l.corretorId===id);
+    const naoContactados = leadsDoCorretor.filter(l=>['Novo','Aguardando Retorno'].includes(l.status) && !(l.interacoes && l.interacoes.length>0));
+    return {
+      id, nome: corretorNome(id),
+      recebidos: leadsDoCorretor.length,
+      contactados: leadsDoCorretor.length - naoContactados.length,
+      naoContactados,
+      atendimentos: leadsDoCorretor.filter(l=>!['Novo','Aguardando Retorno'].includes(l.status)).length,
+      agendamentos: leadsDoCorretor.filter(l=>l.dataVisitaAgendada).length,
+      visitas: leadsDoCorretor.filter(l=>l.dataVisitaRealizada).length
+    };
+  }).filter(r=>r.recebidos>0).sort((a,b)=>b.recebidos-a.recebidos);
+
+  // ---- Onde os leads somem: motivo de perda (registrado a partir desta atualização) e queda do
+  // funil por origem (histórico de vida do lead, mesma lógica da Mensuração de funil). ----
+  const leadsPerdidos = leads.filter(l=>l.status==='Perdido');
+  const porMotivoPerda = contarPorCategoria(leadsPerdidos, l=>l.motivoPerda || 'Não informado (perdido antes desta atualização)', 8);
+  const origensTopPBI = porOrigem.filter(o=>o.label!=='Outros').map(o=>o.label);
+  const quedaPorOrigem = porOrigem.map(o=>{
+    const leadsOrigem = o.label==='Outros'
+      ? leads.filter(l=> !origensTopPBI.includes(l.origem||'Não informado'))
+      : leads.filter(l=> (l.origem||'Não informado')===o.label);
+    return {
+      origem: o.label,
+      lead: leadsOrigem.length,
+      qualificado: leadsOrigem.filter(l=>l.dataQualificado).length,
+      visitaAgendada: leadsOrigem.filter(l=>l.dataVisitaAgendada).length,
+      visitaRealizada: leadsOrigem.filter(l=>l.dataVisitaRealizada).length,
+      proposta: leadsOrigem.filter(l=>l.dataProposta).length,
+      venda: leadsOrigem.filter(l=>l.status==='Fechou').length
+    };
+  });
+
+  // ---- Evolução de vendas (VGV) + pódio de corretores — usa os clientes fechados (não os leads),
+  // somando o valor do(s) lote(s) vinculado(s) de cada cliente. ----
+  const vgvCliente = cl => (cl.imoveisVinculados||[]).reduce((s,imId)=>{ const im = state.imoveis.find(i=>i.id===imId); return s + (im ? Number(im.valores.valor||0) : 0); }, 0);
+  let clientesFechados = scoped(state.clientes);
+  if(pbiProdutoFilter !== 'Todos'){
+    const prodCli = state.produtos.find(p=>p.nome===pbiProdutoFilter);
+    clientesFechados = clientesFechados.filter(cl=> prodCli && (cl.imoveisVinculados||[]).some(imId=>{ const im = state.imoveis.find(i=>i.id===imId); return im && im.produtoId===prodCli.id; }));
+  }
+  if(canManageTeam() && pbiCorretorFilter !== 'Todos'){
+    const uCli = state.usuarios.find(x=>x.nome===pbiCorretorFilter);
+    clientesFechados = clientesFechados.filter(cl=>uCli && cl.corretorId===uCli.id);
+  }
+  if(pbiDataDe) clientesFechados = clientesFechados.filter(cl=>cl.dataFechamento && cl.dataFechamento >= pbiDataDe);
+  if(pbiDataAte) clientesFechados = clientesFechados.filter(cl=>cl.dataFechamento && cl.dataFechamento <= pbiDataAte);
+  const podioCorretores = idsEquipePBI.map(id=>{
+    const clientesDoCorretor = clientesFechados.filter(cl=>cl.corretorId===id);
+    return { nome: corretorNome(id), vendas: clientesDoCorretor.length, vgv: clientesDoCorretor.reduce((s,cl)=>s+vgvCliente(cl),0) };
+  }).filter(r=>r.vendas>0).sort((a,b)=>b.vgv-a.vgv);
 
   const hoje = new Date();
   const mesesArr = [];
@@ -3944,6 +4117,7 @@ function renderPowerBI(){
     serieCaptados.push(acumCaptados);
     serieFechados.push(acumFechados);
   });
+  const serieVGV = mesesArr.map(m => clientesFechados.filter(cl=>cl.dataFechamento && cl.dataFechamento.slice(0,7)===m).reduce((s,cl)=>s+vgvCliente(cl),0));
 
   const nomesCorretor = isGestor() ? state.usuarios.map(u=>u.nome) : state.usuarios.filter(u=>teamMemberIds().includes(u.id)).map(u=>u.nome);
 
@@ -3973,6 +4147,9 @@ function renderPowerBI(){
       <div class="pbi-field" style="align-self:flex-end;">
         <button class="btn btn-sm" id="btnExportarFunilCampanha">📥 Baixar Excel do período</button>
       </div>
+      ${canManageTeam() ? `<div class="pbi-field" style="align-self:flex-end;">
+        <button class="btn btn-sm" id="btnAnalisarEquipeIA">🤖 Analisar equipe com IA</button>
+      </div>` : ''}
     </div>
 
     <div class="pbi-kpis">
@@ -4061,6 +4238,26 @@ function renderPowerBI(){
       <div class="pbi-card-sub" style="margin-bottom:0;">Segmentação a partir da análise de IA feita em cada lead (botão "Analisar com IA" no detalhe do lead) e do tipo de imóvel desejado. ${leadsAnalisadosIA} de ${total} lead(s) deste recorte já têm análise de IA — quanto mais leads analisados, mais completo fica "Objeção principal" e "Forma de pagamento".</div>
     </div>
 
+    ${pbiCard('Nota média de IA por campanha', 'Cruza a nota de qualidade de IA (0-100) de cada lead com a campanha de origem, pra saber quais campanhas trazem lead bom antes mesmo de perguntar pro corretor. O número entre parênteses é quantos leads analisados essa campanha já tem.',
+      notaPorCampanha.length ? pbiBarRows(notaPorCampanha.map(o=>({label:`${o.label} (${o.n})`, value:o.media})), {color:'var(--pbi-gold)', max:100, fullLabel:true}) : `<div style="font-size:12px; color:var(--pbi-ink-soft);">Nenhum lead com campanha E análise de IA neste recorte ainda.</div>`
+    )}
+
+    ${canManageTeam() ? pbiCard('Desempenho por corretor', 'Quantos leads cada corretor recebeu e em que etapa do funil eles avançaram (histórico de vida do lead). Clique num corretor com leads "não contactados" pra ver a lista.', `
+      <table class="pbi-table">
+        <thead><tr><th style="text-align:left;">Corretor</th><th>Recebidos</th><th>Contactados</th><th>Não contactados</th><th>Atendimentos</th><th>Agendamentos</th><th>Visitas</th></tr></thead>
+        <tbody>${desempenhoCorretor.length ? desempenhoCorretor.map(r=>`
+          <tr class="${r.naoContactados.length?'pbi-row-click':''}" ${r.naoContactados.length?`data-corretor-id="${r.id}"`:''}>
+            <td style="text-align:left;">${r.nome}</td>
+            <td>${r.recebidos}</td>
+            <td>${r.contactados}</td>
+            <td>${r.naoContactados.length?`<span style="color:var(--pbi-red); font-weight:700;">${r.naoContactados.length}</span>`:'0'}</td>
+            <td>${r.atendimentos}</td>
+            <td>${r.agendamentos}</td>
+            <td>${r.visitas}</td>
+          </tr>`).join('') : '<tr><td colspan="7" style="color:var(--pbi-ink-soft);">Sem leads recebidos neste recorte.</td></tr>'}</tbody>
+      </table>
+    `) : ''}
+
     <div class="pbi-grid2">
       ${pbiCard('Leads por tipo de imóvel desejado', 'O que os leads estão procurando.', pbiBarRows(porTipoImovel.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-teal)', fullLabel:true}))}
       ${pbiCard('Conversão por tipo de imóvel desejado', '% de cada tipo de imóvel que já fechou.', pbiBarRows(porTipoImovel.map(o=>({label:o.label, value:o.pct})), {color:'var(--pbi-teal)', max:100, fmt:v=>v+'%', fullLabel:true}))}
@@ -4079,6 +4276,28 @@ function renderPowerBI(){
     ${pbiCard('Leads captados x fechamentos (acumulado)', 'Últimos 6 meses, por data de criação do lead.',
       pbiAreaAcumulada(labelsMes, serieCaptados, serieFechados)
     )}
+
+    ${pbiCard('Evolução de vendas (VGV)', 'Valor Geral de Vendas por mês, nos últimos 6 meses (soma do valor do(s) lote(s) de cada cliente fechado, pela data de fechamento).',
+      pbiBarRows(labelsMes.map((lbl,i)=>({label:lbl, value:serieVGV[i]})), {color:'var(--pbi-gold)', fmt:fmtMoney})
+    )}
+
+    ${canManageTeam() ? pbiCard('Pódio de corretores', 'Quem mais vendeu no recorte selecionado, por VGV.', podioCorretores.length ? `
+      <table class="pbi-table">
+        <thead><tr><th style="text-align:left;">#</th><th style="text-align:left;">Corretor</th><th>Vendas</th><th>VGV</th></tr></thead>
+        <tbody>${podioCorretores.map((r,i)=>`<tr><td style="text-align:left;">${['🥇','🥈','🥉'][i]||(i+1)}</td><td style="text-align:left;">${r.nome}</td><td>${r.vendas}</td><td class="mono">${fmtMoney(r.vgv)}</td></tr>`).join('')}</tbody>
+      </table>
+    ` : `<div style="font-size:12px; color:var(--pbi-ink-soft);">Nenhuma venda no recorte selecionado.</div>`) : ''}
+
+    ${pbiCard('Onde os leads somem (motivo de perda)', `${leadsPerdidos.length} lead(s) perdido(s) no recorte. O motivo é registrado a partir desta atualização, sempre que um lead é movido pra "Perdido" (kanban ou lista) — leads perdidos antes disso aparecem como "não informado".`,
+      porMotivoPerda.length ? pbiBarRows(porMotivoPerda.map(o=>({label:o.label, value:o.count})), {color:'var(--pbi-red)', fullLabel:true}) : `<div style="font-size:12px; color:var(--pbi-ink-soft);">Nenhum lead perdido neste recorte.</div>`
+    )}
+
+    ${pbiCard('Queda do funil por origem', 'Quantos leads de cada origem chegaram em cada etapa (histórico de vida do lead) — mostra em qual canal os leads mais somem e em qual etapa.', `
+      <table class="pbi-table">
+        <thead><tr><th style="text-align:left;">Origem</th><th>Lead</th><th>Qualificado</th><th>Visita ag.</th><th>Visita real.</th><th>Proposta</th><th>Venda</th></tr></thead>
+        <tbody>${quedaPorOrigem.length ? quedaPorOrigem.map(r=>`<tr><td style="text-align:left;">${r.origem}</td><td>${r.lead}</td><td>${r.qualificado}</td><td>${r.visitaAgendada}</td><td>${r.visitaRealizada}</td><td>${r.proposta}</td><td>${r.venda}</td></tr>`).join('') : '<tr><td colspan="7" style="color:var(--pbi-ink-soft);">Sem dados.</td></tr>'}</tbody>
+      </table>
+    `)}
 
     <div style="font-size:11px; color:var(--pbi-ink-soft); margin-top:-4px;">💡 Cidade, profissão, faixa de renda, finalidade (morar/investir), tamanho de lote desejado, campanha e criativo são preenchidos (opcional) no cadastro do lead ou vêm automaticamente ao importar uma planilha com essas colunas — quanto mais leads tiverem esse dado, mais preciso fica o painel.</div>
   </div>
@@ -4101,6 +4320,16 @@ function renderPowerBI(){
     const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
     const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
     exportarFunilPorCampanha(leads, rotulo, periodoLabel);
+  });
+  c.querySelectorAll('.pbi-row-click').forEach(tr=>tr.addEventListener('click', ()=>{
+    const r = desempenhoCorretor.find(x=>x.id===tr.dataset.corretorId);
+    if(r) abrirListaLeadsModal(`Leads de ${r.nome} ainda não contactados`, r.naoContactados);
+  }));
+  const btnAnalisarEquipe = document.getElementById('btnAnalisarEquipeIA');
+  if(btnAnalisarEquipe) btnAnalisarEquipe.addEventListener('click', ()=>{
+    const periodoLabel = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'início'} a ${pbiDataAte||'hoje'}` : 'Todo o período (desde o início)';
+    const dadosPorCorretor = desempenhoCorretor.map(r=>({corretor:r.nome, recebidos:r.recebidos, contactados:r.contactados, naoContactados:r.naoContactados.length, atendimentos:r.atendimentos, agendamentos:r.agendamentos, visitas:r.visitas}));
+    analisarEquipeComIA(funilDados, dadosPorCorretor, periodoLabel, btnAnalisarEquipe);
   });
 }
 
@@ -4145,9 +4374,15 @@ function renderProdutos(){
       <div style="font-size:11.5px; color:var(--ink-soft); margin:8px 0; padding:8px 10px; background:var(--paper-2); border-radius:4px;">
         💳 Padrão: ${cp.entradaPercent}% entrada · ${cp.meses}x · ${cp.taxaJuros}% a.m.
       </div>
-      <div style="font-size:12px; color:var(--ink-soft); margin:6px 0 10px 0;">${numLotes} lote(s) · ${state.leads.filter(l=>l.produtoId===p.id).length} lead(s) recebido(s)</div>
+      <div style="font-size:11.5px; color:var(--ink-soft); margin:0 0 8px 0;">
+        ${p.tipo||'Loteamento aberto'}${p.quantidadeLotes?` · ${p.quantidadeLotes} lote(s) no projeto`:''}${p.quadra?` · Quadra(s) ${p.quadra}`:''}${p.areaMinima?` · a partir de ${p.areaMinima}`:''}${p.frenteMinima?` · frente mín. ${p.frenteMinima}`:''}${p.taxaCondominio?` · taxa ${p.taxaCondominio}`:''}
+      </div>
+      ${(p.documentos&&p.documentos.length) ? `<div style="font-size:12px; margin:0 0 8px 0;">📁 ${p.documentos.map(d=>`<a href="${d.url}" target="_blank" style="color:var(--azul); margin-right:8px;">${d.nome}</a>`).join('')}</div>` : ''}
+      <div style="font-size:12px; color:var(--ink-soft); margin:6px 0 10px 0;">${numLotes} lote(s) cadastrado(s) · ${state.leads.filter(l=>l.produtoId===p.id).length} lead(s) recebido(s)</div>
       <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="btn-sm btn-outline copy-link" data-id="${p.id}">🔗 Copiar link do formulário</button>
+        ${p.localizacaoMapaUrl?`<a class="btn-sm btn-outline" href="${p.localizacaoMapaUrl}" target="_blank" style="text-decoration:none;">📍 Ver no mapa</a>`:''}
+        <button class="btn-sm btn-outline compartilhar-lead-produto" data-id="${p.id}">📤 Compartilhar com lead</button>
         ${isGestor()?`<button class="btn-sm btn-outline edit-produto" data-id="${p.id}">Editar</button>`:''}
         ${isGestor()?`<button class="btn-sm btn-outline investimento-produto" data-id="${p.id}">💰 Investimento</button>`:''}
         ${isGestor()?`<button class="btn-sm btn-danger del-produto" data-id="${p.id}">🗑 Excluir loteamento</button>`:''}
@@ -4163,6 +4398,21 @@ function renderProdutos(){
   }));
   body.querySelectorAll('.edit-produto').forEach(b=>b.addEventListener('click', ()=>{
     openProdutoForm(state.produtos.find(x=>x.id===b.dataset.id));
+  }));
+  // "Compartilhar com lead": só a info básica (sem documentos internos nem condições), via WhatsApp —
+  // igual ao padrão já usado no "💬 Abrir WhatsApp" do lead, mas aqui sem destinatário fixo (o corretor escolhe pra quem mandar)
+  body.querySelectorAll('.compartilhar-lead-produto').forEach(b=>b.addEventListener('click', ()=>{
+    const p = state.produtos.find(x=>x.id===b.dataset.id);
+    if(!p) return;
+    const linhas = [
+      `*${p.nome}*${p.cidade?' — '+p.cidade:''}`,
+      p.descricao || '',
+      p.localizacaoMapaUrl ? `📍 Localização: ${p.localizacaoMapaUrl}` : '',
+      `🔗 Mais informações: ${formUrlFor(p)}`
+    ].filter(Boolean);
+    const texto = linhas.join('\n\n');
+    const url = 'https://wa.me/?text=' + encodeURIComponent(texto);
+    window.open(url, '_blank');
   }));
   body.querySelectorAll('.investimento-produto').forEach(b=>b.addEventListener('click', ()=>{
     openInvestimentoProduto(state.produtos.find(x=>x.id===b.dataset.id));
@@ -4237,9 +4487,25 @@ function openInvestimentoProduto(produto){
   render();
 }
 
+// Renderiza a listinha de documentos/links já adicionados, dentro do form de produto, com botão de remover cada um
+function renderProdutoDocsLista(docs){
+  const el = document.getElementById('produtoDocsLista');
+  if(!el) return;
+  el.innerHTML = docs.length ? docs.map((d,i)=>`
+    <div style="display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--line);">
+      <span style="flex:1; font-size:12.5px;"><b>${d.nome}</b> — <a href="${d.url}" target="_blank" style="color:var(--azul);">${d.url}</a></span>
+      <button type="button" class="btn-sm btn-danger produto-doc-remover" data-i="${i}">🗑</button>
+    </div>`).join('') : `<div style="font-size:12px; color:var(--ink-soft);">Nenhum documento/link adicionado ainda.</div>`;
+  el.querySelectorAll('.produto-doc-remover').forEach(b=>b.addEventListener('click', ()=>{
+    docs.splice(Number(b.dataset.i), 1);
+    renderProdutoDocsLista(docs);
+  }));
+}
+
 function openProdutoForm(existing){
   const cp = (existing && existing.condicoesPadrao) ? existing.condicoesPadrao : condicoesPadraoDefault();
   let logoAtual = existing ? existing.logo : null;
+  let documentosAtual = (existing && Array.isArray(existing.documentos)) ? existing.documentos.slice() : [];
   openModal({
     title: existing ? 'Editar produto' : 'Novo produto',
     schema:[
@@ -4248,11 +4514,18 @@ function openProdutoForm(existing){
       {key:'cidade', label:'Cidade'},
       {key:'descricao', label:'Descrição (aparece no formulário público)', type:'textarea'},
       {key:'ativo', label:'Status', type:'select', options:['Ativo','Inativo']},
+      {key:'tipo', label:'Tipo', type:'select', options:['Loteamento aberto','Condomínio fechado']},
+      {key:'quantidadeLotes', label:'Quantidade de lotes', type:'number'},
+      {key:'quadra', label:'Quadra(s)'},
+      {key:'areaMinima', label:'Área mínima (ex: 200m²)'},
+      {key:'frenteMinima', label:'Frente mínima (ex: 8m)'},
+      {key:'taxaCondominio', label:'Taxa de condomínio/associação (se houver)'},
+      {key:'localizacaoMapaUrl', label:'Link do mapa (Google Maps)', placeholder:'Cole aqui o link de compartilhamento do Google Maps'},
       {key:'entradaPercent', label:'Entrada padrão (% do valor do lote)', type:'number'},
       {key:'meses', label:'Prazo padrão (meses)', type:'number'},
       {key:'taxaJuros', label:'Taxa de juros mensal padrão (%)', type:'number', step:'0.01'}
     ],
-    data: existing ? Object.assign({}, existing, {ativo: existing.ativo?'Ativo':'Inativo'}, cp) : Object.assign({ativo:'Ativo'}, condicoesPadraoDefault()),
+    data: existing ? Object.assign({}, existing, {ativo: existing.ativo?'Ativo':'Inativo'}, cp) : Object.assign({ativo:'Ativo', tipo:'Loteamento aberto'}, condicoesPadraoDefault()),
     extraHtml: `
       <p style="font-size:11.5px; color:var(--ink-soft); margin-top:-6px;">Essas condições são o padrão sugerido para os lotes deste loteamento — cada lote continua editável individualmente na sua própria tela.</p>
       <div class="field">
@@ -4265,21 +4538,44 @@ function openProdutoForm(existing){
           </div>
         </div>
       </div>
+      <div class="field">
+        <label>📁 Documentos e links (matrícula, planta baixa, material de marketing, ficha técnica, fotos, vídeo...)</label>
+        <p style="font-size:11px; color:var(--ink-soft); margin:-2px 0 6px 0;">Cole links do Google Drive, YouTube etc. — ficam centralizados aqui, pra compartilhar com o corretor de uma vez só, sem precisar mandar disponibilidade separada.</p>
+        <div id="produtoDocsLista"></div>
+        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
+          <input type="text" id="produtoDocNome" placeholder="Nome (ex: Matrícula)" style="flex:1; min-width:140px;">
+          <input type="text" id="produtoDocUrl" placeholder="Link" style="flex:2; min-width:180px;">
+          <button type="button" class="btn-sm btn-outline" id="produtoDocAdd">+ Adicionar</button>
+        </div>
+      </div>
     `,
     onSave: async (r)=>{
       const ativo = r.ativo === 'Ativo';
       const condicoesPadrao = {entradaPercent: r.entradaPercent!==undefined&&r.entradaPercent!==''?r.entradaPercent:10, meses: r.meses||80, taxaJuros: r.taxaJuros!==undefined&&r.taxaJuros!==''?r.taxaJuros:0.6};
+      const extras = {tipo:r.tipo||'Loteamento aberto', quantidadeLotes:r.quantidadeLotes||null, quadra:r.quadra||'', areaMinima:r.areaMinima||'', frenteMinima:r.frenteMinima||'', taxaCondominio:r.taxaCondominio||'', localizacaoMapaUrl:r.localizacaoMapaUrl||''};
       if(existing){
-        Object.assign(existing, {nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, condicoesPadrao, logo: logoAtual});
+        Object.assign(existing, {nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, condicoesPadrao, logo: logoAtual, documentos: documentosAtual}, extras);
         toast('Produto atualizado.');
       }else{
         let slug = slugify(r.nome) || uid();
         if(state.produtos.some(p=>p.slug===slug)) slug = slug + '-' + Math.floor(Math.random()*900+100);
-        state.produtos.push({ id:uid(), nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, slug, condicoesPadrao, logo: logoAtual });
+        state.produtos.push(Object.assign({ id:uid(), nome:r.nome, empresa:r.empresa, cidade:r.cidade, descricao:r.descricao, ativo, slug, condicoesPadrao, logo: logoAtual, documentos: documentosAtual}, extras));
         toast('Produto cadastrado.');
       }
       save(); closeModal(); renderProdutos();
     }
+  });
+  renderProdutoDocsLista(documentosAtual);
+  const docAddBtn = document.getElementById('produtoDocAdd');
+  if(docAddBtn) docAddBtn.addEventListener('click', ()=>{
+    const nomeEl = document.getElementById('produtoDocNome');
+    const urlEl = document.getElementById('produtoDocUrl');
+    const nome = (nomeEl.value||'').trim();
+    const url = (urlEl.value||'').trim();
+    if(!nome || !url){ alert('Preencha o nome e o link do documento.'); return; }
+    documentosAtual.push({nome, url});
+    nomeEl.value = ''; urlEl.value = '';
+    renderProdutoDocsLista(documentosAtual);
   });
   const logoFileInput = document.getElementById('produtoLogoFile');
   if(logoFileInput) logoFileInput.addEventListener('change', (e)=>{

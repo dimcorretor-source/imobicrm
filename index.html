@@ -3610,10 +3610,10 @@ function abrirAnaliseEquipeModal(texto){
   const root = document.getElementById('modalRoot');
   root.innerHTML = `
     <div class="modal-overlay" id="overlay">
-      <div class="modal">
+      <div class="modal" style="max-width:640px; max-height:85vh; display:flex; flex-direction:column;">
         <button class="btn-sm btn-outline modal-close" id="closeAnaliseEquipe">Fechar</button>
-        <h3>🤖 Análise da equipe (IA)</h3>
-        <div style="white-space:pre-wrap; font-size:13px; line-height:1.55; margin-top:8px;">${texto || 'Sem conteúdo.'}</div>
+        <h3 style="flex:0 0 auto;">🤖 Análise da equipe (IA)</h3>
+        <div style="white-space:pre-wrap; font-size:13px; line-height:1.55; margin-top:8px; overflow-y:auto; flex:1 1 auto; min-height:0; padding-right:4px;">${texto || 'Sem conteúdo.'}</div>
       </div>
     </div>
   `;

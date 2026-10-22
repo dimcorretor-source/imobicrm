@@ -2095,6 +2095,30 @@ function openLeadForm(existing){
         Object.assign(existing, result, {corretorId, imovelInteresseId, produtoId});
         toast('Lead atualizado.');
       }else{
+        // Antes de criar, verifica se já existe um lead com esse mesmo telefone/e-mail (mesma
+        // checagem já usada na importação por planilha) -- nunca duplica. Se já pertence a outro
+        // corretor, pergunta se quer transferir; senão só atualiza os dados no lead existente.
+        const dup = encontrarLeadDuplicado(result);
+        if(dup){
+          let mudarCorretor = true;
+          if(dup.corretorId && dup.corretorId !== corretorId){
+            mudarCorretor = confirm(`Já existe um lead com esse telefone/e-mail: "${dup.nome}" (hoje com ${corretorNome(dup.corretorId)}).\n\nMudar esse lead para ${corretorNome(corretorId)}? Cancelar mantém com ${corretorNome(dup.corretorId)} e só atualiza os demais dados.`);
+          }else{
+            alert(`Já existe um lead com esse telefone/e-mail: "${dup.nome}". Os dados foram atualizados nesse lead existente -- nada foi duplicado.`);
+          }
+          Object.keys(result).forEach(k=>{
+            if(result[k] !== undefined && result[k] !== '' && (dup[k]===undefined || dup[k]===null || dup[k]==='')) dup[k] = result[k];
+          });
+          if(imovelInteresseId && !dup.imovelInteresseId) dup.imovelInteresseId = imovelInteresseId;
+          if(produtoId && !dup.produtoId) dup.produtoId = produtoId;
+          if(mudarCorretor) dup.corretorId = corretorId;
+          dup.interacoes = dup.interacoes || [];
+          dup.interacoes.push({data: todayISO(), descricao: mudarCorretor ? `Lead recadastrado e transferido para ${corretorNome(corretorId)}.` : 'Lead recadastrado (dados atualizados -- mesmo telefone/e-mail já existia no sistema).'});
+          dup.ultimoContato = todayISO();
+          toast('Lead já existia -- dados atualizados, nada duplicado.');
+          save(); closeModal(); renderLeads();
+          return;
+        }
         const lead = Object.assign({
           id: uid(), status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId, imovelInteresseId, produtoId
         }, result);

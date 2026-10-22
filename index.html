@@ -3833,6 +3833,31 @@ function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
   XLSX.writeFile(wb, `leads-${sufixo}.xlsx`);
 }
 
+// Exporta só o card "Relatório de leads" do Power BI (os 8 números em Geral/Só Laís/Tudo junto),
+// recebendo os 3 resultados já calculados por relatorioResumoLeads() em renderPowerBI().
+function exportarRelatorioLeads(linhas, relatorioGeral, relatorioSoLais, relatorioTudoJunto, rotuloPeriodo, periodoLabel){
+  if(typeof XLSX === 'undefined'){
+    alert('Não foi possível carregar o gerador de planilha (é preciso estar conectado à internet na primeira vez que abrir o sistema).');
+    return;
+  }
+  const corpo = linhas.map(l=>({
+    '': l.label,
+    'Geral (sem Laís)': relatorioGeral[l.campo],
+    'Só Laís (IA)': relatorioSoLais[l.campo],
+    'Tudo junto': relatorioTudoJunto[l.campo]
+  }));
+  const ws = XLSX.utils.json_to_sheet(corpo, {origin:'A3'});
+  XLSX.utils.sheet_add_aoa(ws, [
+    [`Período: ${periodoLabel || 'Todo o período (desde o início)'}`],
+    [`Gerado em: ${new Date().toLocaleString('pt-BR')}`]
+  ], {origin:'A1'});
+  ws['!cols'] = [{wch:34},{wch:18},{wch:16},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Relatório de leads');
+  const sufixo = rotuloPeriodo || todayISO();
+  XLSX.writeFile(wb, `relatorio-leads-${sufixo}.xlsx`);
+}
+
 /* ============================================================
    RELATÓRIOS
 ============================================================ */
@@ -4350,6 +4375,9 @@ function renderPowerBI(){
     </div>
 
     ${pbiCard('Relatório de leads', 'Resumo lado a lado nos 3 recortes de canal — independe do filtro "Canal de entrada" do topo (que só afeta os gráficos abaixo), mas respeita produto/corretor/período selecionados.', `
+      <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+        <button class="btn-sm btn-outline" id="btnExportarRelatorioLeads" title="Baixar só esse relatório em Excel">📥 Baixar Excel</button>
+      </div>
       <table class="pbi-table">
         <thead><tr><th style="text-align:left;"></th><th>Geral (sem Laís)</th><th>Só Laís (IA)</th><th>Tudo junto</th></tr></thead>
         <tbody>${LINHAS_RELATORIO_LEADS.map(l=>`
@@ -4562,6 +4590,13 @@ function renderPowerBI(){
     const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
     const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
     exportarListaLeads(leads, rotulo, periodoLabel);
+  });
+  const btnExportarRelatorio = document.getElementById('btnExportarRelatorioLeads');
+  if(btnExportarRelatorio) btnExportarRelatorio.addEventListener('click', ()=>{
+    const fmtBR = iso => iso ? iso.split('-').reverse().join('/') : '';
+    const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
+    const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
+    exportarRelatorioLeads(LINHAS_RELATORIO_LEADS, relatorioGeral, relatorioSoLais, relatorioTudoJunto, rotulo, periodoLabel);
   });
   c.querySelectorAll('.pbi-row-click').forEach(tr=>tr.addEventListener('click', ()=>{
     const r = desempenhoCorretor.find(x=>x.id===tr.dataset.corretorId);

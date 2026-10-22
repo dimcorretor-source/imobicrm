@@ -3707,6 +3707,58 @@ function exportarFunilPorCampanha(leads, rotuloPeriodo, periodoLabel){
   XLSX.writeFile(wb, `funil-por-campanha-${sufixo}.xlsx`);
 }
 
+// Exporta a lista completa de leads, um por linha, com os principais dados de cada um --
+// diferente do "Funil por campanha" (que é agregado por campanha), aqui dá pra abrir no
+// Excel e filtrar/analisar lead por lead (quem respondeu, de qual corretor, qual origem etc.).
+function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
+  if(typeof XLSX === 'undefined'){
+    alert('Não foi possível carregar o gerador de planilha (é preciso estar conectado à internet na primeira vez que abrir o sistema).');
+    return;
+  }
+  const respondeu = l => (l.interacoes||[]).some(i=>/^Lead respondeu:/i.test(i.descricao||''));
+  const leadsOrdenados = leads.slice().sort((a,b)=> String(b.dataCriacao||'').localeCompare(String(a.dataCriacao||'')));
+  const linhas = leadsOrdenados.map(l=>{
+    const produto = state.produtos.find(p=>p.id===l.produtoId);
+    return {
+      'Nome': l.nome || '',
+      'Telefone': l.telefone || '',
+      'Email': l.email || '',
+      'Status': l.status || '',
+      'Corretor': corretorNome(l.corretorId) || '',
+      'Produto': produto ? produto.nome : '',
+      'Origem': l.origem || '',
+      'Campanha': l.campanha || '',
+      'Criativo': l.criativo || '',
+      'Cidade': l.cidade || '',
+      'Profissão': l.profissao || '',
+      'Faixa de renda': l.faixaRenda || '',
+      'Finalidade': l.finalidade || '',
+      'Tamanho de lote desejado': l.tamanhoLoteDesejado || '',
+      'Data de criação': fmtDate(l.dataCriacao),
+      'Último contato': fmtDate(l.ultimoContato),
+      'Respondeu?': respondeu(l) ? 'Sim' : 'Não',
+      'Qtd. interações': (l.interacoes||[]).length,
+      'Pontuação IA': (l.pontuacaoIa===null || l.pontuacaoIa===undefined) ? '' : l.pontuacaoIa,
+      'Objeção principal': l.objecaoPrincipal || '',
+      'Motivo da perda': l.motivoPerda || '',
+      'Data da venda': fmtDate(l.dataVenda)
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(linhas, {origin:'A3'});
+  XLSX.utils.sheet_add_aoa(ws, [
+    [`Período: ${periodoLabel || 'Todo o período (desde o início)'}`],
+    [`Gerado em: ${new Date().toLocaleString('pt-BR')} · Total de leads: ${linhas.length}`]
+  ], {origin:'A1'});
+  ws['!cols'] = [
+    {wch:26},{wch:16},{wch:24},{wch:16},{wch:16},{wch:18},{wch:14},{wch:20},{wch:20},{wch:16},
+    {wch:16},{wch:16},{wch:12},{wch:20},{wch:13},{wch:13},{wch:10},{wch:14},{wch:12},{wch:20},{wch:18},{wch:13}
+  ];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+  const sufixo = rotuloPeriodo || todayISO();
+  XLSX.writeFile(wb, `leads-${sufixo}.xlsx`);
+}
+
 /* ============================================================
    RELATÓRIOS
 ============================================================ */
@@ -3986,6 +4038,13 @@ function renderPowerBI(){
   const taxaConv = total ? Math.round(100*fechados/total) : 0;
   const valorPotencial = leads.filter(l=>!['Fechou','Perdido'].includes(l.status)).reduce((s,l)=>s+Number(l.orcamento||0),0);
 
+  // ---- Quem já respondeu: olha o histórico de interações de cada lead procurando uma resposta
+  // do cliente (mesmo texto/prefixo que o bot usa pra registrar isso -- "Lead respondeu: ...").
+  // Dá pra ver de relance quantos leads engajaram de verdade vs. quantos nunca retornaram contato.
+  const respondeu = l => (l.interacoes||[]).some(i=>/^Lead respondeu:/i.test(i.descricao||''));
+  const totalResponderam = leads.filter(respondeu).length;
+  const pctResponderam = total ? Math.round(100*totalResponderam/total) : 0;
+
   const ETAPAS_FUNIL = ['Novo','Aguardando Retorno','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
   const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
 
@@ -4054,6 +4113,7 @@ function renderPowerBI(){
       recebidos: leadsDoCorretor.length,
       contactados: leadsDoCorretor.length - naoContactados.length,
       naoContactados,
+      responderam: leadsDoCorretor.filter(respondeu).length,
       atendimentos: leadsDoCorretor.filter(l=>!['Novo','Aguardando Retorno'].includes(l.status)).length,
       agendamentos: leadsDoCorretor.filter(l=>l.dataVisitaAgendada).length,
       visitas: leadsDoCorretor.filter(l=>l.dataVisitaRealizada).length
@@ -4147,6 +4207,9 @@ function renderPowerBI(){
       <div class="pbi-field" style="align-self:flex-end;">
         <button class="btn btn-sm" id="btnExportarFunilCampanha">📥 Baixar Excel do período</button>
       </div>
+      <div class="pbi-field" style="align-self:flex-end;">
+        <button class="btn btn-sm" id="btnExportarListaLeads">📋 Baixar lista de leads</button>
+      </div>
       ${canManageTeam() ? `<div class="pbi-field" style="align-self:flex-end;">
         <button class="btn btn-sm" id="btnAnalisarEquipeIA">🤖 Analisar equipe com IA</button>
       </div>` : ''}
@@ -4158,6 +4221,17 @@ function renderPowerBI(){
       <div class="pbi-kpi"><div class="pbi-kpi-label">Valor em potencial</div><div class="pbi-kpi-value">${fmtMoney(valorPotencial)}</div><div class="pbi-kpi-sub">orçamento dos leads em aberto</div></div>
       <div class="pbi-kpi" style="display:flex; align-items:center; justify-content:center; padding:6px;">${pbiGauge(taxaConv, 'Taxa de conversão')}</div>
     </div>
+
+    ${pbiCard('Quem já respondeu', 'Leads com pelo menos uma resposta do cliente registrada no histórico (seja pelo WhatsApp automático ou manual) — pra separar quem só recebeu contato de quem realmente engajou.', `
+      <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+        ${pbiGauge(pctResponderam, '% que respondeu', 'var(--pbi-teal)')}
+        <div style="display:flex; gap:28px; flex-wrap:wrap;">
+          <div><div class="pbi-kpi-label">Responderam</div><div class="pbi-kpi-value" style="font-size:26px;">${totalResponderam}</div></div>
+          <div><div class="pbi-kpi-label">Nunca responderam</div><div class="pbi-kpi-value" style="font-size:26px;">${total-totalResponderam}</div></div>
+        </div>
+      </div>
+      ${canManageTeam() ? '<div class="pbi-card-sub" style="margin-top:10px; margin-bottom:0;">Quebra por corretor na tabela "Desempenho por corretor" mais abaixo (coluna "Responderam").</div>' : ''}
+    `)}
 
     ${pbiCard('Funil de leads', 'Quantos leads estão hoje em cada etapa do funil (não inclui Remarketing/Perdido).',
       pbiBarRows(funilDados, {color:'var(--pbi-teal)'})
@@ -4244,17 +4318,18 @@ function renderPowerBI(){
 
     ${canManageTeam() ? pbiCard('Desempenho por corretor', 'Quantos leads cada corretor recebeu e em que etapa do funil eles avançaram (histórico de vida do lead). Clique num corretor com leads "não contactados" pra ver a lista.', `
       <table class="pbi-table">
-        <thead><tr><th style="text-align:left;">Corretor</th><th>Recebidos</th><th>Contactados</th><th>Não contactados</th><th>Atendimentos</th><th>Agendamentos</th><th>Visitas</th></tr></thead>
+        <thead><tr><th style="text-align:left;">Corretor</th><th>Recebidos</th><th>Contactados</th><th>Não contactados</th><th>Responderam</th><th>Atendimentos</th><th>Agendamentos</th><th>Visitas</th></tr></thead>
         <tbody>${desempenhoCorretor.length ? desempenhoCorretor.map(r=>`
           <tr class="${r.naoContactados.length?'pbi-row-click':''}" ${r.naoContactados.length?`data-corretor-id="${r.id}"`:''}>
             <td style="text-align:left;">${r.nome}</td>
             <td>${r.recebidos}</td>
             <td>${r.contactados}</td>
             <td>${r.naoContactados.length?`<span style="color:var(--pbi-red); font-weight:700;">${r.naoContactados.length}</span>`:'0'}</td>
+            <td>${r.responderam}</td>
             <td>${r.atendimentos}</td>
             <td>${r.agendamentos}</td>
             <td>${r.visitas}</td>
-          </tr>`).join('') : '<tr><td colspan="7" style="color:var(--pbi-ink-soft);">Sem leads recebidos neste recorte.</td></tr>'}</tbody>
+          </tr>`).join('') : '<tr><td colspan="8" style="color:var(--pbi-ink-soft);">Sem leads recebidos neste recorte.</td></tr>'}</tbody>
       </table>
     `) : ''}
 
@@ -4320,6 +4395,14 @@ function renderPowerBI(){
     const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
     const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
     exportarFunilPorCampanha(leads, rotulo, periodoLabel);
+  });
+  const btnExportarLista = document.getElementById('btnExportarListaLeads');
+  if(btnExportarLista) btnExportarLista.addEventListener('click', ()=>{
+    if(!leads.length){ alert('Nenhum lead encontrado nesse período (considerando também os filtros de Produto/Corretor/Período lá em cima, se houver).'); return; }
+    const fmtBR = iso => iso ? iso.split('-').reverse().join('/') : '';
+    const rotulo = (pbiDataDe || pbiDataAte) ? `${pbiDataDe||'inicio'}_a_${pbiDataAte||'hoje'}` : 'todos-os-leads';
+    const periodoLabel = (pbiDataDe || pbiDataAte) ? `${fmtBR(pbiDataDe) || 'início'} a ${fmtBR(pbiDataAte) || 'hoje'}` : 'Todo o período (desde o início)';
+    exportarListaLeads(leads, rotulo, periodoLabel);
   });
   c.querySelectorAll('.pbi-row-click').forEach(tr=>tr.addEventListener('click', ()=>{
     const r = desempenhoCorretor.find(x=>x.id===tr.dataset.corretorId);

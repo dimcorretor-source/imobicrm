@@ -4092,6 +4092,10 @@ function renderPowerBI(){
   if(pbiDataAte){
     leads = leads.filter(l=>l.dataCriacao && l.dataCriacao <= pbiDataAte);
   }
+  // Guarda o recorte ANTES de aplicar o filtro de canal -- o card "Relatório de leads" abaixo
+  // precisa mostrar Geral/Só Laís/Tudo junto lado a lado ao mesmo tempo, independente de qual
+  // opção estiver selecionada no filtro "Canal de entrada" do topo.
+  const leadsPreCanal = leads;
   if(pbiCanalFilter === 'Só Laís (IA)'){
     leads = leads.filter(l=>l.canalEntrada===LEAD_CANAL_LAIS);
   }else if(pbiCanalFilter === 'Geral (sem Laís)'){
@@ -4116,6 +4120,35 @@ function renderPowerBI(){
   const viaLais = l => l.canalEntrada === LEAD_CANAL_LAIS;
   const totalViaLais = leads.filter(viaLais).length;
   const pctViaLais = total ? Math.round(100*totalViaLais/total) : 0;
+
+  // ---- Relatório de leads (Geral / Só Laís / Tudo junto): os 8 números resumo que o Pedro pediu,
+  // sempre calculados nos 3 recortes de canal ao mesmo tempo (independente do filtro "Canal de
+  // entrada" do topo), mas respeitando os outros filtros (produto/corretor/período). ----
+  function relatorioResumoLeads(escopo){
+    return {
+      recebidos: escopo.length,
+      desqualificados: escopo.filter(l=>l.status==='Perdido').length,
+      naoResponderam: escopo.filter(l=>!respondeu(l)).length,
+      responderam: escopo.filter(respondeu).length,
+      oportunidades: escopo.filter(l=>l.interesseReal==='Procurando e com interesse').length,
+      visitas: escopo.filter(l=>l.dataVisitaAgendada || l.dataVisitaRealizada).length,
+      vendas: escopo.filter(l=>l.status==='Fechou').length,
+      aguardandoRetorno: escopo.filter(l=>l.status==='Aguardando Retorno').length
+    };
+  }
+  const relatorioGeral = relatorioResumoLeads(leadsPreCanal.filter(l=>l.canalEntrada!==LEAD_CANAL_LAIS));
+  const relatorioSoLais = relatorioResumoLeads(leadsPreCanal.filter(l=>l.canalEntrada===LEAD_CANAL_LAIS));
+  const relatorioTudoJunto = relatorioResumoLeads(leadsPreCanal);
+  const LINHAS_RELATORIO_LEADS = [
+    {label:'Total de leads recebidos', campo:'recebidos'},
+    {label:'Leads desqualificados', campo:'desqualificados'},
+    {label:'Não responderam', campo:'naoResponderam'},
+    {label:'Leads que responderam ao contato', campo:'responderam'},
+    {label:'Oportunidades identificadas', campo:'oportunidades'},
+    {label:'Visitas agendadas ou realizadas', campo:'visitas'},
+    {label:'Vendas concretizadas', campo:'vendas'},
+    {label:'Leads aguardando retorno', campo:'aguardandoRetorno'}
+  ];
 
   const ETAPAS_FUNIL = ['Novo','Aguardando Retorno','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
   const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
@@ -4301,6 +4334,19 @@ function renderPowerBI(){
       <div class="pbi-kpi"><div class="pbi-kpi-label">Valor em potencial</div><div class="pbi-kpi-value">${fmtMoney(valorPotencial)}</div><div class="pbi-kpi-sub">orçamento dos leads em aberto</div></div>
       <div class="pbi-kpi" style="display:flex; align-items:center; justify-content:center; padding:6px;">${pbiGauge(taxaConv, 'Taxa de conversão')}</div>
     </div>
+
+    ${pbiCard('Relatório de leads', 'Resumo lado a lado nos 3 recortes de canal — independe do filtro "Canal de entrada" do topo (que só afeta os gráficos abaixo), mas respeita produto/corretor/período selecionados.', `
+      <table class="pbi-table">
+        <thead><tr><th style="text-align:left;"></th><th>Geral (sem Laís)</th><th>Só Laís (IA)</th><th>Tudo junto</th></tr></thead>
+        <tbody>${LINHAS_RELATORIO_LEADS.map(l=>`
+          <tr>
+            <td style="text-align:left;">${l.label}</td>
+            <td>${relatorioGeral[l.campo]}</td>
+            <td>${relatorioSoLais[l.campo]}</td>
+            <td>${relatorioTudoJunto[l.campo]}</td>
+          </tr>`).join('')}</tbody>
+      </table>
+    `)}
 
     ${pbiCard('Quem já respondeu', 'Leads com pelo menos uma resposta do cliente registrada no histórico (seja pelo WhatsApp automático ou manual) — pra separar quem só recebeu contato de quem realmente engajou.', `
       <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">

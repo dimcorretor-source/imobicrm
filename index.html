@@ -2476,6 +2476,9 @@ function confirmImportLeads(mapped){
   if(isGestor() || isGerente()) schema.push({key:'corretorNome', label:'Atribuir todos ao corretor', type:'select', options: (isGestor()?state.usuarios:state.usuarios.filter(u=>teamMemberIds().includes(u.id))).map(u=>u.nome)});
   // Feature: escolher o empreendimento de destino para os leads importados
   schema.push({key:'produtoNome', label:'Empreendimento (produto) de destino', type:'select', options:['(nenhum)', ...state.produtos.map(p=>p.nome)]});
+  // Feature: marcar que essa lista inteira veio de um canal específico (hoje só a Laís) --
+  // aplica em todos os leads do lote, novos e já existentes (igual ao corretor/produto acima).
+  schema.push({key:'canalEntrada', label:'Canal de entrada desta lista (opcional)', type:'select', options:['(nenhum)', ...LEAD_CANAIS_ENTRADA]});
 
   const avisoDuplicados = duplicados ? `
     <div class="card" style="border-color:var(--latao); margin-top:10px;">
@@ -2492,7 +2495,7 @@ function confirmImportLeads(mapped){
 
   openModal({
     title: `Importar ${mapped.length} lead(s) da planilha`,
-    schema, data:{corretorNome: currentUser().nome, produtoNome:'(nenhum)'},
+    schema, data:{corretorNome: currentUser().nome, produtoNome:'(nenhum)', canalEntrada:'(nenhum)'},
     extraHtml: `<p style="font-size:12.5px; color:var(--ink-soft);">Encontrei <b>${mapped.length}</b> linha(s) com nome preenchido — <b>${novos}</b> novo(s). Colunas não reconhecidas (origem, tipo etc.) usam um valor padrão e podem ser ajustadas depois em cada lead.</p>${avisoDuplicados}`,
     onSave:(r)=>{
       let corretorId = currentUser().id;
@@ -2502,6 +2505,7 @@ function confirmImportLeads(mapped){
       }
       const prodSel = state.produtos.find(p=>p.nome===r.produtoNome);
       const produtoId = prodSel ? prodSel.id : null;
+      const canalEntrada = (r.canalEntrada && r.canalEntrada !== '(nenhum)') ? r.canalEntrada : '';
       const transferirDuplicados = document.getElementById('importTransferirDuplicados');
       const podeTransferir = transferirDuplicados ? transferirDuplicados.checked : false;
 
@@ -2526,13 +2530,23 @@ function confirmImportLeads(mapped){
           if(m.observacoes) dup.observacoes = (dup.observacoes?dup.observacoes+' | ':'') + String(m.observacoes);
           if(produtoId) dup.produtoId = produtoId;
           if(!outroCorretor || podeTransferir) dup.corretorId = corretorId;
+          if(canalEntrada){
+            dup.canalEntrada = canalEntrada;
+            dup.interacoes = dup.interacoes || [];
+            dup.interacoes.push({data: todayISO(), descricao: `Novo contato via ${canalEntrada}, atribuído a ${corretorNome(dup.corretorId)}.`});
+          }
           atualizados++;
         }else{
+          const interacoesNovoLead = [];
+          if(canalEntrada === LEAD_CANAL_LAIS){
+            interacoesNovoLead.push({data: todayISO(), descricao: `Lead recebido via ${LEAD_CANAL_LAIS}, atribuído a ${corretorNome(corretorId)}.`});
+          }
           state.leads.push({
             id: uid(), nome:String(m.nome||'').trim(), telefone:String(m.telefone||''), email:String(m.email||''),
             origem: matchOrigem(m.origem) || 'Outros',
             campanha: String(m.campanha||'').trim(),
             criativo: String(m.criativo||'').trim(),
+            canalEntrada,
             tipo: LEAD_TIPOS.includes(m.tipo)?m.tipo:'Comprador',
             orcamento: parseFloat(m.orcamento)||0,
             cidade: m.cidade ? tituloCidade(m.cidade) : '',
@@ -2544,7 +2558,7 @@ function confirmImportLeads(mapped){
             tamanhoLoteDesejado: String(m.tamanhoLoteDesejado||'').trim(),
             observacoes: String(m.observacoes||''),
             imovelInteresseId: null, produtoId,
-            status:'Novo', dataCriacao: (m.dataLead && parseDataLead(m.dataLead)) || todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId
+            status:'Novo', dataCriacao: (m.dataLead && parseDataLead(m.dataLead)) || todayISO(), ultimoContato: todayISO(), interacoes:interacoesNovoLead, corretorId
           });
           criados++;
         }

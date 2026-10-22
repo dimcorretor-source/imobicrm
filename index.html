@@ -430,8 +430,8 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null, motivoPerda:r.motivo_perda||null }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null, motivo_perda:l.motivoPerda||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null, motivoPerda:r.motivo_perda||null, interesseReal:r.interesse_real||null }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null, motivo_perda:l.motivoPerda||null, interesse_real:l.interesseReal||null }; }
 
 function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
 function investimentoToRow(inv){ return { id:inv.id, produto_id:inv.produtoId||null, mes:inv.mes, valor:Number(inv.valor||0) }; }
@@ -1309,6 +1309,10 @@ const LEAD_TIPOS = ['Comprador','Vendedor','Locatário','Investidor'];
 const LEAD_PROFISSOES = ['Empresário/Autônomo','Servidor público','Profissional liberal (médico, advogado, dentista, engenheiro...)','Executivo/CLT','Aposentado','Estudante','Outra'];
 const LEAD_FAIXAS_RENDA = ['Até R$ 3.000','R$ 3.001 – R$ 6.000','R$ 6.001 – R$ 10.000','R$ 10.001 – R$ 20.000','Acima de R$ 20.000'];
 const LEAD_FINALIDADES = ['Morar','Investir'];
+// Flag rápida que o corretor marca depois do primeiro contato real, pra separar lead genuíno
+// (realmente procurando imóvel) de contato sem propósito -- alimenta o Power BI pra entender
+// se o volume de leads que entra é "gente de verdade procurando" ou não.
+const LEAD_INTERESSE_REAL_OPCOES = ['Procurando e com interesse','Procurando, mas sem interesse','Não estava procurando imóvel'];
 // Cidades da região com muita variação de grafia/acento/hífen na base (mesmo lugar escrito de
 // jeitos diferentes: "Mogi-Guaçu", "Moji Guaçu", "Mogi Guacu"...) -- mapeia a forma "limpa" (sem
 // acento, minúscula) pra grafia correta, assim tudo cai na MESMA linha no gráfico do Power BI
@@ -2115,6 +2119,14 @@ function openLeadDetail(id){
         <div style="margin-bottom:14px; font-size:11px; color:var(--ink-soft);">
           ${[['Qualificado',lead.dataQualificado],['Visita agendada',lead.dataVisitaAgendada],['Visita realizada',lead.dataVisitaRealizada],['Proposta',lead.dataProposta],['Venda',lead.dataVenda]].filter(([,d])=>d).map(([label,d])=>`✓ ${label}: ${fmtDate(d)}`).join('   ')}
         </div>
+
+        <div style="margin-bottom:16px;">
+          <label style="font-size:11.5px; font-weight:600; color:var(--ink-soft); text-transform:uppercase; display:block; margin-bottom:6px;">Esse lead realmente procurava imóvel?</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${LEAD_INTERESSE_REAL_OPCOES.map(op=>`<button type="button" class="pill interesse-real-pill ${lead.interesseReal===op?'active':''}" data-op="${op}">${op}</button>`).join('')}
+          </div>
+        </div>
+
         <div class="grid grid-2" style="margin-bottom:16px; font-size:13px;">
           <div><b>Telefone:</b> ${lead.telefone||'—'}</div>
           <div><b>E-mail:</b> ${lead.email||'—'}</div>
@@ -2198,6 +2210,13 @@ function openLeadDetail(id){
   if(btnAnalisarIA) btnAnalisarIA.addEventListener('click', e=> analisarLeadComIA(lead, e.target));
   const verImovelBtn = document.getElementById('verImovelLead');
   if(verImovelBtn) verImovelBtn.addEventListener('click', ()=>{ closeModal(); openImovelDetail(lead.imovelInteresseId); });
+  document.querySelectorAll('.interesse-real-pill').forEach(btn=>btn.addEventListener('click', ()=>{
+    // Clique único marca/salva na hora -- clicar de novo na mesma opção desmarca (volta a "não informado").
+    lead.interesseReal = (lead.interesseReal === btn.dataset.op) ? null : btn.dataset.op;
+    save();
+    toast(lead.interesseReal ? 'Marcado: ' + lead.interesseReal : 'Flag removida.');
+    openLeadDetail(id);
+  }));
   const delLeadBtn = document.getElementById('delLead');
   if(delLeadBtn) delLeadBtn.addEventListener('click', ()=>{
     if(!confirm('Excluir este lead permanentemente?')) return;
@@ -3738,6 +3757,7 @@ function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
       'Último contato': fmtDate(l.ultimoContato),
       'Respondeu?': respondeu(l) ? 'Sim' : 'Não',
       'Qtd. interações': (l.interacoes||[]).length,
+      'Procurava imóvel?': l.interesseReal || 'Não informado',
       'Pontuação IA': (l.pontuacaoIa===null || l.pontuacaoIa===undefined) ? '' : l.pontuacaoIa,
       'Objeção principal': l.objecaoPrincipal || '',
       'Motivo da perda': l.motivoPerda || '',
@@ -3751,7 +3771,7 @@ function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
   ], {origin:'A1'});
   ws['!cols'] = [
     {wch:26},{wch:16},{wch:24},{wch:16},{wch:16},{wch:18},{wch:14},{wch:20},{wch:20},{wch:16},
-    {wch:16},{wch:16},{wch:12},{wch:20},{wch:13},{wch:13},{wch:10},{wch:14},{wch:12},{wch:20},{wch:18},{wch:13}
+    {wch:16},{wch:16},{wch:12},{wch:20},{wch:13},{wch:13},{wch:10},{wch:14},{wch:24},{wch:12},{wch:20},{wch:18},{wch:13}
   ];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Leads');
@@ -4093,6 +4113,7 @@ function renderPowerBI(){
   const porFaixaRenda = agruparComConversao(leads, l=>l.faixaRenda, {ordem: LEAD_FAIXAS_RENDA});
   const porFinalidade = agruparComConversao(leads, l=>l.finalidade, {ordem: LEAD_FINALIDADES});
   const porTamanhoLote = agruparComConversao(leads, l=>l.tamanhoLoteDesejado, {limite:8});
+  const porInteresseReal = agruparComConversao(leads, l=>l.interesseReal, {ordem: LEAD_INTERESSE_REAL_OPCOES});
   const porCampanha = agruparComConversao(leads, l=>l.campanha, {limite:7});
   const porCriativo = agruparComConversao(leads, l=>l.criativo, {limite:7});
   const porTipoImovel = agruparComConversao(leads, l=>l.tipoImovelDesejado, {limite:8});
@@ -4232,6 +4253,11 @@ function renderPowerBI(){
       </div>
       ${canManageTeam() ? '<div class="pbi-card-sub" style="margin-top:10px; margin-bottom:0;">Quebra por corretor na tabela "Desempenho por corretor" mais abaixo (coluna "Responderam").</div>' : ''}
     `)}
+
+    <div class="pbi-grid2">
+      ${pbiCard('Leads que realmente procuravam imóvel', 'Flag marcada pelo corretor no detalhe do lead, depois do primeiro contato real — pra entender se o lead que entra é gente de verdade procurando ou não. "Não informado" = ainda sem flag marcada.', pbiBarRows(porInteresseReal.map(o=>({label:o.label, value:o.count})), {color:(it,i)=>['var(--pbi-teal)','var(--pbi-gold)','var(--pbi-red)','var(--pbi-line)'][i]||'var(--pbi-line)', fullLabel:true}))}
+      ${pbiCard('Conversão por interesse real', '% de cada grupo (com/sem interesse real) que já fechou negócio.', pbiBarRows(porInteresseReal.map(o=>({label:o.label, value:o.pct})), {color:(it,i)=>['var(--pbi-teal)','var(--pbi-gold)','var(--pbi-red)','var(--pbi-line)'][i]||'var(--pbi-line)', max:100, fmt:v=>v+'%', fullLabel:true}))}
+    </div>
 
     ${pbiCard('Funil de leads', 'Quantos leads estão hoje em cada etapa do funil (não inclui Remarketing/Perdido).',
       pbiBarRows(funilDados, {color:'var(--pbi-teal)'})

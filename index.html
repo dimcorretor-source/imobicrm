@@ -430,8 +430,8 @@ function toast(msg){
 }
 
 /* ---------- mapeamento linha do banco <-> objeto local ---------- */
-function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null, motivoPerda:r.motivo_perda||null, interesseReal:r.interesse_real||null }; }
-function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null, motivo_perda:l.motivoPerda||null, interesse_real:l.interesseReal||null }; }
+function rowToLead(r){ return { id:r.id, nome:r.nome, telefone:r.telefone, email:r.email, origem:r.origem, criativo:r.criativo||'', campanha:r.campanha||'', tipo:r.tipo, cidade:r.cidade||'', profissao:r.profissao||'', faixaRenda:r.faixa_renda||'', finalidade:r.finalidade||'', tamanhoLoteDesejado:r.tamanho_lote||'', orcamento:r.orcamento, bairrosInteresse:r.bairros_interesse, tipoImovelDesejado:r.tipo_imovel_desejado, imovelInteresseId:r.imovel_interesse_id, produtoId:r.produto_id, consentimento:!!r.consentimento, observacoes:r.observacoes, status:r.status, dataCriacao:r.data_criacao, ultimoContato:r.ultimo_contato, dataQualificado:r.data_qualificado, dataVisitaAgendada:r.data_visita_agendada, dataVisitaRealizada:r.data_visita_realizada, dataProposta:r.data_proposta, dataVenda:r.data_venda, interacoes:r.interacoes||[], corretorId:r.corretor_id, roletaStatus:r.roleta_status, roletaPrazo:r.roleta_prazo, roletaAtribuidoEm:r.roleta_atribuido_em, pontuacaoIa:r.pontuacao_ia, pontuacaoDetalhe:r.pontuacao_detalhe||[], fichaIa:r.ficha_ia||null, objecaoPrincipal:r.objecao_principal||null, analiseResumo:r.analise_resumo||null, analiseProximoPasso:r.analise_proximo_passo||null, analiseMensagemSugerida:r.analise_mensagem_sugerida||null, analiseCoach:r.analise_coach||null, analiseAtualizadoEm:r.analise_atualizado_em||null, motivoPerda:r.motivo_perda||null, interesseReal:r.interesse_real||null, canalEntrada:r.canal_entrada||null }; }
+function leadToRow(l){ return { id:l.id, nome:l.nome, telefone:l.telefone, email:l.email, origem:l.origem, criativo:l.criativo||null, campanha:l.campanha||null, tipo:l.tipo, cidade:l.cidade||null, profissao:l.profissao||null, faixa_renda:l.faixaRenda||null, finalidade:l.finalidade||null, tamanho_lote:l.tamanhoLoteDesejado||null, orcamento:l.orcamento||0, bairros_interesse:l.bairrosInteresse, tipo_imovel_desejado:l.tipoImovelDesejado, imovel_interesse_id:l.imovelInteresseId||null, produto_id:l.produtoId||null, observacoes:l.observacoes, status:l.status, data_criacao:l.dataCriacao||null, ultimo_contato:l.ultimoContato||null, data_qualificado:l.dataQualificado||null, data_visita_agendada:l.dataVisitaAgendada||null, data_visita_realizada:l.dataVisitaRealizada||null, data_proposta:l.dataProposta||null, data_venda:l.dataVenda||null, interacoes:l.interacoes||[], corretor_id:l.corretorId, roleta_status:l.roletaStatus||null, roleta_prazo:l.roletaPrazo||null, roleta_atribuido_em:l.roletaAtribuidoEm||null, motivo_perda:l.motivoPerda||null, interesse_real:l.interesseReal||null, canal_entrada:l.canalEntrada||null }; }
 
 function rowToInvestimento(r){ return { id:r.id, produtoId:r.produto_id, mes:r.mes, valor:Number(r.valor||0) }; }
 function investimentoToRow(inv){ return { id:inv.id, produto_id:inv.produtoId||null, mes:inv.mes, valor:Number(inv.valor||0) }; }
@@ -1313,6 +1313,12 @@ const LEAD_FINALIDADES = ['Morar','Investir'];
 // (realmente procurando imóvel) de contato sem propósito -- alimenta o Power BI pra entender
 // se o volume de leads que entra é "gente de verdade procurando" ou não.
 const LEAD_INTERESSE_REAL_OPCOES = ['Procurando e com interesse','Procurando, mas sem interesse','Não estava procurando imóvel'];
+// Canal de entrada do lead quando ele passa por um sistema intermediário antes de cair pra um
+// corretor (hoje só a Laís, atendimento automático por telefone com IA) -- isso é SEPARADO da
+// Origem/Campanha (que seguem contando de onde veio o anúncio/contato); aqui é só "por qual
+// sistema esse lead passou antes de ser atribuído a um corretor".
+const LEAD_CANAL_LAIS = 'Laís (IA)';
+const LEAD_CANAIS_ENTRADA = [LEAD_CANAL_LAIS];
 // Cidades da região com muita variação de grafia/acento/hífen na base (mesmo lugar escrito de
 // jeitos diferentes: "Mogi-Guaçu", "Moji Guaçu", "Mogi Guacu"...) -- mapeia a forma "limpa" (sem
 // acento, minúscula) pra grafia correta, assim tudo cai na MESMA linha no gráfico do Power BI
@@ -1362,6 +1368,7 @@ function leadSchema(){
     {key:'origem', label:'Origem', type:'select', options:LEAD_ORIGENS},
     {key:'campanha', label:'Campanha (opcional)'},
     {key:'criativo', label:'Criativo/anúncio (opcional)'},
+    {key:'canalEntrada', label:'Canal de entrada (opcional)', type:'select', options:['(nenhum)', ...LEAD_CANAIS_ENTRADA]},
     {key:'tipo', label:'Tipo', type:'select', options:LEAD_TIPOS},
     {key:'cidade', label:'Cidade (opcional)'},
     {key:'profissao', label:'Profissão (opcional)', type:'select', options:['(não informado)', ...LEAD_PROFISSOES]},
@@ -2072,7 +2079,7 @@ function openLeadForm(existing){
   const schema = leadSchema();
   const imAtual = existing && state.imoveis.find(i=>i.id===existing.imovelInteresseId);
   const prodAtual = existing && state.produtos.find(p=>p.id===existing.produtoId);
-  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)', profissao: existing.profissao||'(não informado)', faixaRenda: existing.faixaRenda||'(não informado)', finalidade: existing.finalidade||'(não informado)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)', profissao:'(não informado)', faixaRenda:'(não informado)', finalidade:'(não informado)'};
+  const data = existing ? Object.assign({}, existing, {corretorNome: corretorNome(existing.corretorId), imovelCodigo: imAtual?imAtual.codigo:'(nenhum)', produtoNome: prodAtual?prodAtual.nome:'(nenhum)', profissao: existing.profissao||'(não informado)', faixaRenda: existing.faixaRenda||'(não informado)', finalidade: existing.finalidade||'(não informado)', canalEntrada: existing.canalEntrada||'(nenhum)'}) : {imovelCodigo:'(nenhum)', produtoNome:'(nenhum)', profissao:'(não informado)', faixaRenda:'(não informado)', finalidade:'(não informado)', canalEntrada:'(nenhum)'};
   openModal({
     title: existing ? 'Editar lead' : 'Novo lead',
     schema, data,
@@ -2089,6 +2096,7 @@ function openLeadForm(existing){
       if(result.profissao==='(não informado)') result.profissao = '';
       if(result.faixaRenda==='(não informado)') result.faixaRenda = '';
       if(result.finalidade==='(não informado)') result.finalidade = '';
+      if(result.canalEntrada==='(nenhum)') result.canalEntrada = '';
       if(result.cidade) result.cidade = tituloCidade(result.cidade);
       delete result.corretorNome; delete result.imovelCodigo; delete result.produtoNome;
       if(existing){
@@ -2113,7 +2121,9 @@ function openLeadForm(existing){
           if(produtoId && !dup.produtoId) dup.produtoId = produtoId;
           if(mudarCorretor) dup.corretorId = corretorId;
           dup.interacoes = dup.interacoes || [];
-          dup.interacoes.push({data: todayISO(), descricao: mudarCorretor ? `Lead recadastrado e transferido para ${corretorNome(corretorId)}.` : 'Lead recadastrado (dados atualizados -- mesmo telefone/e-mail já existia no sistema).'});
+          let descDup = mudarCorretor ? `Lead recadastrado e transferido para ${corretorNome(corretorId)}.` : 'Lead recadastrado (dados atualizados -- mesmo telefone/e-mail já existia no sistema).';
+          if(result.canalEntrada === LEAD_CANAL_LAIS) descDup += ` Novo contato via ${LEAD_CANAL_LAIS}.`;
+          dup.interacoes.push({data: todayISO(), descricao: descDup});
           dup.ultimoContato = todayISO();
           toast('Lead já existia -- dados atualizados, nada duplicado.');
           save(); closeModal(); renderLeads();
@@ -2122,6 +2132,10 @@ function openLeadForm(existing){
         const lead = Object.assign({
           id: uid(), status:'Novo', dataCriacao: todayISO(), ultimoContato: todayISO(), interacoes:[], corretorId, imovelInteresseId, produtoId
         }, result);
+        if(lead.canalEntrada === LEAD_CANAL_LAIS){
+          // Marca no histórico, desde a criação, que esse lead veio da Laís e pra quem foi atribuído.
+          lead.interacoes.push({data: todayISO(), descricao: `Lead recebido via ${LEAD_CANAL_LAIS}, atribuído a ${corretorNome(corretorId)}.`});
+        }
         state.leads.push(lead);
         toast('Lead cadastrado.');
       }
@@ -2139,7 +2153,7 @@ function openLeadDetail(id){
       <div class="modal">
         <button class="btn-sm btn-outline modal-close" id="closeDetail">Fechar</button>
         <h3>${lead.nome}</h3>
-        <div style="margin-bottom:6px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} ${scoreBadgeHtml(lead)} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
+        <div style="margin-bottom:6px;">${stamp(lead.status)} ${roletaBadgeHtml(lead)} ${scoreBadgeHtml(lead)} ${lead.canalEntrada===LEAD_CANAL_LAIS?'<span class="stamp s-azul">🤖 Via Laís</span>':''} <span class="mono" style="font-size:11px; color:var(--ink-soft); margin-left:8px;">criado em ${fmtDate(lead.dataCriacao)}</span>${isGestor()?` <span class="mono" style="font-size:11px; color:var(--ink-soft);">· ${corretorNome(lead.corretorId)}</span>`:''}${leadPendenciaInfo(lead)?` <span class="stamp s-vermelho">⚠ Pendente — agende a próxima ação</span>`:''}</div>
         <div style="margin-bottom:14px; font-size:11px; color:var(--ink-soft);">
           ${[['Qualificado',lead.dataQualificado],['Visita agendada',lead.dataVisitaAgendada],['Visita realizada',lead.dataVisitaRealizada],['Proposta',lead.dataProposta],['Venda',lead.dataVenda]].filter(([,d])=>d).map(([label,d])=>`✓ ${label}: ${fmtDate(d)}`).join('   ')}
         </div>
@@ -2157,6 +2171,7 @@ function openLeadDetail(id){
           <div><b>Origem:</b> ${lead.origem}</div>
           <div><b>Campanha:</b> ${lead.campanha||'—'}</div>
           <div><b>Criativo/anúncio:</b> ${lead.criativo||'—'}</div>
+          <div><b>Canal de entrada:</b> ${lead.canalEntrada||'—'}</div>
           <div><b>Tipo:</b> ${lead.tipo}</div>
           <div><b>Cidade:</b> ${lead.cidade||'—'}</div>
           <div><b>Profissão:</b> ${lead.profissao||'—'}</div>
@@ -3772,6 +3787,7 @@ function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
       'Origem': l.origem || '',
       'Campanha': l.campanha || '',
       'Criativo': l.criativo || '',
+      'Canal de entrada': l.canalEntrada || '',
       'Cidade': l.cidade || '',
       'Profissão': l.profissao || '',
       'Faixa de renda': l.faixaRenda || '',
@@ -3794,7 +3810,7 @@ function exportarListaLeads(leads, rotuloPeriodo, periodoLabel){
     [`Gerado em: ${new Date().toLocaleString('pt-BR')} · Total de leads: ${linhas.length}`]
   ], {origin:'A1'});
   ws['!cols'] = [
-    {wch:26},{wch:16},{wch:24},{wch:16},{wch:16},{wch:18},{wch:14},{wch:20},{wch:20},{wch:16},
+    {wch:26},{wch:16},{wch:24},{wch:16},{wch:16},{wch:18},{wch:14},{wch:20},{wch:20},{wch:18},{wch:16},
     {wch:16},{wch:16},{wch:12},{wch:20},{wch:13},{wch:13},{wch:10},{wch:14},{wch:24},{wch:12},{wch:20},{wch:18},{wch:13}
   ];
   const wb = XLSX.utils.book_new();
@@ -3993,6 +4009,7 @@ let pbiCorretorFilter = 'Todos';
 let pbiDataDe = ''; // 'YYYY-MM-DD' ou vazio (filtro de período aberto, por data real do lead)
 let pbiDataAte = ''; // 'YYYY-MM-DD' ou vazio
 let pbiMesMensuracao = mesAtualISO(); // mês (YYYY-MM) usado só pelo card de Mensuração de funil
+let pbiCanalFilter = 'Tudo junto'; // 'Tudo junto' | 'Geral (sem Laís)' | 'Só Laís (IA)' -- isola ou junta os leads vindos da Laís no mesmo Power BI
 
 function pbiBarRows(items, opts){
   opts = opts || {};
@@ -4075,6 +4092,11 @@ function renderPowerBI(){
   if(pbiDataAte){
     leads = leads.filter(l=>l.dataCriacao && l.dataCriacao <= pbiDataAte);
   }
+  if(pbiCanalFilter === 'Só Laís (IA)'){
+    leads = leads.filter(l=>l.canalEntrada===LEAD_CANAL_LAIS);
+  }else if(pbiCanalFilter === 'Geral (sem Laís)'){
+    leads = leads.filter(l=>l.canalEntrada!==LEAD_CANAL_LAIS);
+  }
 
   const total = leads.length;
   const fechados = leads.filter(l=>l.status==='Fechou').length;
@@ -4088,6 +4110,12 @@ function renderPowerBI(){
   const respondeu = l => (l.interacoes||[]).some(i=>/^Lead respondeu:/i.test(i.descricao||''));
   const totalResponderam = leads.filter(respondeu).length;
   const pctResponderam = total ? Math.round(100*totalResponderam/total) : 0;
+
+  // ---- Leads via Laís: quantos leads do recorte atual passaram pela Laís (atendimento por IA
+  // via telefone) antes de serem atribuídos a um corretor. Separado de Origem/Campanha de propósito.
+  const viaLais = l => l.canalEntrada === LEAD_CANAL_LAIS;
+  const totalViaLais = leads.filter(viaLais).length;
+  const pctViaLais = total ? Math.round(100*totalViaLais/total) : 0;
 
   const ETAPAS_FUNIL = ['Novo','Aguardando Retorno','Em Contato','Qualificado','Agendou Visita','Visitou','Proposta','Negociando','Fechou'];
   const funilDados = ETAPAS_FUNIL.map(st=>({label:st, value: leads.filter(l=>l.status===st).length}));
@@ -4159,6 +4187,7 @@ function renderPowerBI(){
       contactados: leadsDoCorretor.length - naoContactados.length,
       naoContactados,
       responderam: leadsDoCorretor.filter(respondeu).length,
+      viaLais: leadsDoCorretor.filter(viaLais).length,
       atendimentos: leadsDoCorretor.filter(l=>!['Novo','Aguardando Retorno'].includes(l.status)).length,
       agendamentos: leadsDoCorretor.filter(l=>l.dataVisitaAgendada).length,
       visitas: leadsDoCorretor.filter(l=>l.dataVisitaRealizada).length
@@ -4242,6 +4271,12 @@ function renderPowerBI(){
         </select>
       </div>` : ''}
       <div class="pbi-field">
+        <label>Canal de entrada</label>
+        <select id="pbiFiltroCanal">
+          ${['Tudo junto','Geral (sem Laís)','Só Laís (IA)'].map(n=>`<option value="${n}" ${pbiCanalFilter===n?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+      <div class="pbi-field">
         <label>Período - de</label>
         <input type="date" id="pbiFiltroDataDe" value="${pbiDataDe}">
       </div>
@@ -4276,6 +4311,17 @@ function renderPowerBI(){
         </div>
       </div>
       ${canManageTeam() ? '<div class="pbi-card-sub" style="margin-top:10px; margin-bottom:0;">Quebra por corretor na tabela "Desempenho por corretor" mais abaixo (coluna "Responderam").</div>' : ''}
+    `)}
+
+    ${pbiCard('Leads via Laís (IA)', `Leads que passaram pelo atendimento automático da Laís antes de serem atribuídos a um corretor — separado da Origem/Campanha do anúncio. Use o filtro "Canal de entrada" no topo pra isolar só esses leads ou só o restante.`, `
+      <div style="display:flex; align-items:center; gap:24px; flex-wrap:wrap;">
+        ${pbiGauge(pctViaLais, '% via Laís', 'var(--pbi-gold)')}
+        <div style="display:flex; gap:28px; flex-wrap:wrap;">
+          <div><div class="pbi-kpi-label">Via Laís</div><div class="pbi-kpi-value" style="font-size:26px;">${totalViaLais}</div></div>
+          <div><div class="pbi-kpi-label">Outros canais</div><div class="pbi-kpi-value" style="font-size:26px;">${total-totalViaLais}</div></div>
+        </div>
+      </div>
+      ${canManageTeam() ? '<div class="pbi-card-sub" style="margin-top:10px; margin-bottom:0;">Quebra por corretor na tabela "Desempenho por corretor" mais abaixo (coluna "Via Laís").</div>' : ''}
     `)}
 
     <div class="pbi-grid2">
@@ -4368,7 +4414,7 @@ function renderPowerBI(){
 
     ${canManageTeam() ? pbiCard('Desempenho por corretor', 'Quantos leads cada corretor recebeu e em que etapa do funil eles avançaram (histórico de vida do lead). Clique num corretor com leads "não contactados" pra ver a lista.', `
       <table class="pbi-table">
-        <thead><tr><th style="text-align:left;">Corretor</th><th>Recebidos</th><th>Contactados</th><th>Não contactados</th><th>Responderam</th><th>Atendimentos</th><th>Agendamentos</th><th>Visitas</th></tr></thead>
+        <thead><tr><th style="text-align:left;">Corretor</th><th>Recebidos</th><th>Contactados</th><th>Não contactados</th><th>Responderam</th><th>Via Laís</th><th>Atendimentos</th><th>Agendamentos</th><th>Visitas</th></tr></thead>
         <tbody>${desempenhoCorretor.length ? desempenhoCorretor.map(r=>`
           <tr class="${r.naoContactados.length?'pbi-row-click':''}" ${r.naoContactados.length?`data-corretor-id="${r.id}"`:''}>
             <td style="text-align:left;">${r.nome}</td>
@@ -4376,10 +4422,11 @@ function renderPowerBI(){
             <td>${r.contactados}</td>
             <td>${r.naoContactados.length?`<span style="color:var(--pbi-red); font-weight:700;">${r.naoContactados.length}</span>`:'0'}</td>
             <td>${r.responderam}</td>
+            <td>${r.viaLais}</td>
             <td>${r.atendimentos}</td>
             <td>${r.agendamentos}</td>
             <td>${r.visitas}</td>
-          </tr>`).join('') : '<tr><td colspan="8" style="color:var(--pbi-ink-soft);">Sem leads recebidos neste recorte.</td></tr>'}</tbody>
+          </tr>`).join('') : '<tr><td colspan="9" style="color:var(--pbi-ink-soft);">Sem leads recebidos neste recorte.</td></tr>'}</tbody>
       </table>
     `) : ''}
 
@@ -4432,6 +4479,8 @@ function renderPowerBI(){
   if(selProd) selProd.addEventListener('change', ()=>{ pbiProdutoFilter = selProd.value; renderPowerBI(); });
   const selCorr = document.getElementById('pbiFiltroCorretor');
   if(selCorr) selCorr.addEventListener('change', ()=>{ pbiCorretorFilter = selCorr.value; renderPowerBI(); });
+  const selCanal = document.getElementById('pbiFiltroCanal');
+  if(selCanal) selCanal.addEventListener('change', ()=>{ pbiCanalFilter = selCanal.value; renderPowerBI(); });
   const inpDataDe = document.getElementById('pbiFiltroDataDe');
   if(inpDataDe) inpDataDe.addEventListener('change', ()=>{ pbiDataDe = inpDataDe.value; renderPowerBI(); });
   const inpDataAte = document.getElementById('pbiFiltroDataAte');

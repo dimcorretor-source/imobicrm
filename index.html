@@ -1390,8 +1390,9 @@ function leadSchema(){
 }
 
 let leadFilter = 'Todos';
-let leadView = 'lista';
+let leadView = 'kanban';
 let leadCorretorFilter = 'Todos';
+let leadProdutoFilter = 'Todos';
 let leadSelectMode = false;
 let leadSelected = new Set();
 let leadBusca = '';
@@ -1405,6 +1406,10 @@ function leadsFiltradosAtual(){
   if(canManageTeam() && leadCorretorFilter!=='Todos'){
     const u = state.usuarios.find(x=>x.nome===leadCorretorFilter);
     pool = pool.filter(l=>u && l.corretorId===u.id);
+  }
+  if(leadProdutoFilter!=='Todos'){
+    const p = state.produtos.find(x=>x.nome===leadProdutoFilter);
+    pool = pool.filter(l=>p && l.produtoId===p.id);
   }
   if(leadBusca && leadBusca.trim()){
     const termo = leadBusca.trim().toLowerCase();
@@ -1430,6 +1435,7 @@ function renderLeads(){
       <input type="text" id="leadBuscaInput" placeholder="🔎 Buscar lead por nome ou telefone" value="${leadBusca}">
     </div>
     <div class="pillbar" id="leadPills"></div>
+    ${state.produtos.length>1?'<div class="pillbar" id="leadProdutoPills"></div>':''}
     ${canManageTeam()?'<div class="pillbar" id="leadCorretorPills"></div>':''}
     <div id="leadBody"></div>
   `;
@@ -1494,6 +1500,16 @@ function renderLeadBody(){
   LEAD_STATUSES.forEach(s=> counts[s] = base.filter(l=>l.status===s).length);
   pills.innerHTML = ['Todos', ...LEAD_STATUSES].map(s=>`<button class="pill ${leadFilter===s?'active':''}" data-s="${s}">${s} (${counts[s]||0})</button>`).join('');
   pills.querySelectorAll('.pill').forEach(p=>p.addEventListener('click', ()=>{ leadFilter=p.dataset.s; renderLeadBody(); }));
+
+  if(state.produtos.length>1){
+    // Flagzinha pra separar os leads por produto/empreendimento (ex.: Flor D'Aldeia x Florabella)
+    // direto na tela de Leads, sem precisar ir no Power BI -- pra não ficarem misturados.
+    const pp = document.getElementById('leadProdutoPills');
+    const contsProduto = {Todos: base.length};
+    state.produtos.forEach(p=> contsProduto[p.nome] = base.filter(l=>l.produtoId===p.id).length);
+    pp.innerHTML = ['Todos', ...state.produtos.map(p=>p.nome)].map(n=>`<button class="pill ${leadProdutoFilter===n?'active':''}" data-n="${n}">📦 ${n} (${contsProduto[n]||0})</button>`).join('');
+    pp.querySelectorAll('.pill').forEach(p=>p.addEventListener('click', ()=>{ leadProdutoFilter=p.dataset.n; renderLeadBody(); }));
+  }
 
   if(canManageTeam()){
     const cp = document.getElementById('leadCorretorPills');
